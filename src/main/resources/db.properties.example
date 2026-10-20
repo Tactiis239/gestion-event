@@ -2,7 +2,7 @@
 # Ne versionnez JAMAIS db.properties (voir .gitignore) : seul l'exemple est dans le dépôt.
 
 # --- SQLite (par défaut, aucune installation) ---
-db.url=jdbc:sqlite:kit.db
+db.url=jdbc:sqlite:evenements.db
 db.user=
 db.password=
 
