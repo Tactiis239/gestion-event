@@ -44,7 +44,7 @@ Organiser un événement entre amis ou en famille passe souvent par des groupes 
 | **Organisateur** | Personne qui a créé l'événement ou qui a été ajoutée comme co-organisateur : administre, invite, gère les besoins. |
 | **Invité**       | Personne ayant reçu une invitation : y répond et, si elle a accepté, peut prendre en charge un besoin.             |
 
-Une même personne peut être organisatrice d'un événement et invitée à un autre : le rôle dépend de l'événement, pas du compte.
+Une même personne peut être organisatrice d'un événement et invitée à un autre : le rôle dépend de l'événement, pas du compte. Ce choix correspond à l'usage réel (chacun organise ses propres événements) ; en base, il se traduit par la table de jonction `organisateur` et par la table `invitation` (section 8).
 
 ### 2.4 Attentes
 
@@ -68,8 +68,8 @@ Le volume horaire imparti (18 heures cumulées) délimite strictement le périm�
 | Build              | Maven (`pom.xml`)                                       | Compilation et dépendances identiques sur toutes les machines du groupe.                   |
 | Bibliothèques      | `sqlite-jdbc`, `jBCrypt`, JavaFX (`org.openjfx`)        | Les seules dépendances du projet ; SQLite et bcrypt sont demandés par l'enseignant.        |
 | Réseau             | Sockets TCP (`ServerSocket` / `Socket`) + flux texte    | Plus simple qu'une API REST et directement lié au cours. Un thread par client connecté.    |
-| Échanges           | Une ligne de texte par `Requete` / `Reponse` (`PrintWriter` / `BufferedReader`) | Protocole simple et lisible, testable à la main ; pas de sérialisation Java. |
-| Persistance        | Base SQLite accédée en JDBC (`sqlite-jdbc`)             | Données conservées entre deux lancements, dans un seul fichier, sans serveur à installer.  |
+| Échanges           | Une ligne de texte par `Requete` / `Reponse` (`PrintWriter` / `BufferedReader`) | Protocole simple et lisible, testable à la main ; pas de sérialisation Java, donc pas de désérialisation naïve. |
+| Persistance        | SQLite via JDBC (`sqlite-jdbc`), `ConnexionBD` + `DepotJDBC` | Données conservées entre deux lancements, dans un seul fichier, sans serveur à installer. |
 | Interface          | JavaFX (vues FXML + contrôleurs)                        | Interface graphique claire ; la séparation vue / contrôleur reste lisible en POO.          |
 | Mots de passe      | Hachés avec bcrypt (`jBCrypt`)                          | Jamais stockés en clair ; bcrypt intègre un sel et un coût réglable contre la force brute. |
 | Images             | Logo, bannière et avatar stockés en `byte[]` (BLOB)     | Stockés directement dans SQLite ; encodés en Base64 pour passer dans le flux texte.       |
@@ -80,7 +80,7 @@ Le volume horaire imparti (18 heures cumulées) délimite strictement le périm�
 
 ## 4. Périmètre fonctionnel (développé dans les 18 h)
 
-Priorités : **P1** = indispensable à la démonstration, **P2** = prévu, réalisé si le planning le permet.
+Priorités : **P1** = MVP, indispensable à la démonstration ; **P2** = prévu, réalisé si le planning le permet ; **P3** = bonus, seulement s'il reste du temps.
 
 ### 4.1 Authentification
 
@@ -99,9 +99,9 @@ Priorités : **P1** = indispensable à la démonstration, **P2** = prévu, réal
 | F6  | La personne voit la liste des événements qu'elle organise et de ceux auxquels elle est invitée.                                                                                             | P1       |
 | F7  | Un organisateur modifie les informations de l'événement.                                                                                                                                    | P2       |
 | F8  | Un organisateur supprime l'événement (invitations, besoins et messages associés sont supprimés).                                                                                            | P2       |
-| F9  | À la création, l'application propose des besoins selon le type (`besoinsSuggeres()`) : pour un mariage, un budget traiteur (`Consommable`).                                                | P2       |
+| F9  | À la création, l'application propose des besoins selon le type (`besoinsSuggeres()`) : pour un mariage, un budget traiteur (`Consommable`).                                                | P3       |
 | F10 | Un organisateur ajoute un co-organisateur parmi les personnes existantes.                                                                                                                   | P2       |
-| F11 | Un organisateur ajoute un logo et une bannière à l'événement ; chaque personne peut avoir un avatar.                                                                                        | P2       |
+| F11 | Un organisateur ajoute un logo et une bannière à l'événement ; chaque personne peut avoir un avatar.                                                                                        | P3       |
 
 ### 4.3 Invitations
 
@@ -177,7 +177,7 @@ Priorités : **P1** = indispensable à la démonstration, **P2** = prévu, réal
 
 - **Robustesse :** une entrée invalide (date mal formée, e-mail inconnu, prix négatif) affiche un message d'erreur et ne fait jamais planter le client ni le serveur.
 - **Réactivité :** côté client, les appels réseau s'exécutent hors du thread JavaFX (`Task`) pour que l'interface ne se fige jamais.
-- **Sécurité :** chaque requête est vérifiée côté serveur ; le client n'est jamais considéré comme fiable.
+- **Sécurité :** chaque requête est vérifiée côté serveur ; le client n'est jamais considéré comme fiable. Toutes les requêtes SQL utilisent `PreparedStatement` (pas d'injection SQL).
 - **Maintenabilité :** attributs `private`, accès par méthodes ; ajouter un type de besoin = ajouter une sous-classe.
 - **Portabilité :** fonctionne sur Windows, macOS et Linux avec un JDK 17 ; Maven récupère la version de JavaFX adaptée au système.
 - **Lisibilité :** noms de classes et méthodes en français, cohérents avec les diagrammes UML.
@@ -192,14 +192,14 @@ L'application est découpée en quatre paquets :
 | --------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `modele`  | Objets métier et leurs règles                | `Personne`, `Evenement`, `TypeEvenement`, `Invitation`, `StatutInvitation`, `Message`, `Besoin` (+ `Consommable`, `Materiel` → `MateriauSon`, `Lumiere`) |
 | `reseau`  | Protocole partagé entre client et serveur    | `Requete`, `Reponse`, `TypeRequete`                                                                                                                       |
-| `serveur` | Écoute réseau, contrôle d'accès, persistance | `Serveur`, `GestionnaireClient`, `ServiceEvenements`, `Depot` (interface), `DepotSQLite`, exceptions                                                      |
+| `serveur` | Écoute réseau, contrôle d'accès, persistance | `Serveur`, `GestionnaireClient`, `ServiceEvenements`, `Depot` (interface), `DepotJDBC`, `ConnexionBD`, exceptions                                         |
 | `client`  | Connexion au serveur et interface JavaFX     | `Client`, `ApplicationClient`, `ControleurConnexion`, `ControleurEvenements`, `ControleurEvenement` (+ vues `.fxml`)                                      |
 
 Notions POO mises en œuvre :
 
 - **Héritage :** `Besoin` → `Consommable`, `Materiel` ; `Materiel` → `MateriauSon`, `Lumiere`.
 - **Classes abstraites et polymorphisme :** `Besoin` et `Materiel` sont abstraites ; `decrire()` et `getCategorie()` sont redéfinies dans les sous-classes.
-- **Interface :** `Depot`, implémentée par `DepotSQLite` (le service ne dépend que de l'interface : on pourrait changer de base sans le modifier).
+- **Interface :** `Depot`, implémentée par `DepotJDBC` (le service ne dépend que de l'interface : on pourrait changer de base sans le modifier).
 - **Composition :** un `Evenement` possède ses `Invitation`, ses `Besoin` et ses `Message` (supprimés avec lui).
 - **Agrégation :** un `Evenement` référence ses organisateurs (`Personne`), qui existent indépendamment de lui.
 - **Énumérations :** `TypeEvenement`, `StatutInvitation`, `TypeRequete`.
@@ -208,23 +208,89 @@ Notions POO mises en œuvre :
 
 ---
 
-## 8. Conception UML
+## 8. Base de données
+
+SGBD : **SQLite** (autorisé par le module, aucune installation). Le schéma est la traduction directe du diagramme de classes (section 9.2).
+
+### 8.1 Modèle logique (MLD)
+
+Clés primaires notées `PK`, clés étrangères notées `#`.
+
+| Table          | Colonnes                                                                                                                                                       | Origine dans l'UML                         |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `personne`     | `id` PK, `nom`, `prenom`, `telephone`, `avatar` (BLOB), `email` UNIQUE NOT NULL, `mdp_hash` NOT NULL, `date_naissance`                                       | Classe `Personne`                          |
+| `evenement`    | `id` PK, `nom` NOT NULL, `lieu`, `prix`, `logo` (BLOB), `banniere` (BLOB), `description`, `date_evenement` NOT NULL, `capacite_max`, `type`                  | Classe `Evenement` + enum `TypeEvenement`  |
+| `organisateur` | `#id_evenement`, `#id_personne` — PK composée                                                                                                                  | Lien N–N `organisateurs` → table de jonction |
+| `invitation`   | `id` PK, `#id_evenement`, `#id_personne`, `statut`, `date_invitation` — UNIQUE (`id_evenement`, `id_personne`)                                               | Classe `Invitation` (lien 1–N `invitations`) |
+| `besoin`       | `id` PK, `#id_evenement`, `#id_acheteur` (NULL possible), `type`, `nom`, `prix`, `quantite`, `unite`, `perissable`, `a_rendre`, `etat`, `puissance_watts`, `couleur` | Hiérarchie `Besoin` (table unique)         |
+| `message`      | `id` PK, `#id_evenement`, `#id_envoyeur`, `#id_receveur`, `contenu` NOT NULL, `date_envoi` NOT NULL                                                           | Classe `Message`                           |
+
+Les compositions de l'UML (`Invitation`, `Besoin`, `Message` dans `Evenement`) se traduisent par `ON DELETE CASCADE` sur `id_evenement` (F8). Les clés étrangères sont activées à chaque connexion (`PRAGMA foreign_keys = ON`, désactivé par défaut dans SQLite).
+
+### 8.2 Héritage : table unique
+
+Toute la hiérarchie `Besoin` (`Consommable`, `MateriauSon`, `Lumiere`) est stockée dans la table `besoin`, avec une colonne `type` (`CONSOMMABLE`, `MATERIAU_SON`, `LUMIERE`).
+
+- **Pourquoi :** l'écran principal (F21, F23) liste tous les besoins d'un événement, quel que soit leur type : une seule requête, sans jointure.
+- **Contrepartie :** quelques colonnes `NULL` (`unite` n'a de sens que pour un consommable). Des contraintes `CHECK` par type empêchent les combinaisons incohérentes.
+- **Côté Java :** le DAO utilise une Factory qui instancie la bonne sous-classe selon la colonne `type`.
+
+### 8.3 Contraintes
+
+| Contrainte                                                                     | Règle protégée               |
+| ------------------------------------------------------------------------------ | ---------------------------- |
+| `UNIQUE (email)` sur `personne`                                                | Un compte par e-mail (F1)    |
+| `UNIQUE (id_evenement, id_personne)` sur `invitation`                          | Pas de double invitation (F14) |
+| `CHECK (statut IN ('EN_ATTENTE', 'ACCEPTEE', 'REFUSEE'))`                      | Enum `StatutInvitation`      |
+| `CHECK (type IN ('ANNIVERSAIRE', 'MARIAGE', 'SOIREE', 'AUTRE'))`               | Enum `TypeEvenement`         |
+| `CHECK (capacite_max > 0)`, `CHECK (prix >= 0)`, `CHECK (quantite > 0)`        | Valeurs métier valides       |
+
+### 8.4 Données non stockées
+
+Rien de ce qui se calcule n'est enregistré : le coût d'un besoin (`prix × quantite`), le budget d'un événement, l'âge d'une personne, le nombre de participants et le fait qu'un événement soit complet sont calculés à la demande (`calculerCout()`, `calculerBudget()`, `getAge()`, `getParticipants()`, `estComplet()`).
+
+### 8.5 Index
+
+Au moins deux index, chacun justifié par un `EXPLAIN QUERY PLAN` avant / après (dans `bdd/optimisation.md`) :
+
+| Index                                               | Requête accélérée                                   |
+| --------------------------------------------------- | --------------------------------------------------- |
+| `idx_invitation_personne ON invitation (id_personne)` | « Mes invitations » (F15)                           |
+| `idx_besoin_evenement ON besoin (id_evenement)`     | Liste des besoins d'un événement (F21, F23, F24)    |
+| `idx_message_receveur ON message (id_receveur, date_envoi)` | Messages reçus, triés par date (F26)        |
+
+L'index créé par `UNIQUE (id_evenement, id_personne)` couvre déjà la liste des invitations d'un événement (F17).
+
+### 8.6 Transactions
+
+- **Acceptation d'une invitation (F16, règle 4) :** dans une transaction, l'`UPDATE` du statut n'est appliqué que si le nombre d'invités ayant accepté reste inférieur à `capacite_max`. Si l'`UPDATE` modifie 0 ligne, quelqu'un a pris la dernière place : l'acceptation est refusée.
+- **Refus après acceptation (F22) :** le passage à `REFUSEE` et la libération des besoins de l'invité (`id_acheteur = NULL`) sont validés ensemble, ou pas du tout (`commit` / `rollback`).
+
+### 8.7 Accès JDBC
+
+- `ConnexionBD` lit les paramètres dans `db.properties`, qui n'est pas versionné (modèle : `db.properties.example`).
+- `DepotJDBC` implémente l'interface `Depot` ; toutes les requêtes passent par `PreparedStatement` (jamais de SQL concaténé) et `try-with-resources`.
+- `schema.sql` et `donnees_test.sql` recréent la base en une commande ; `MainTestBDD` vérifie que l'accès aux données fonctionne.
+
+---
+
+## 9. Conception UML
 
 Les sources PlantUML (`.puml`) et les images sont dans le dossier `uml/`.
 
-### 8.1 Diagramme de cas d'utilisation
+### 9.1 Diagramme de cas d'utilisation
 
 ![Diagramme de cas d'utilisation](uml/cas-utilisation.png)
 
 Les actions sensibles incluent toutes le cas « Vérifier les droits d'accès », réalisé côté serveur par `ServiceEvenements`.
 
-### 8.2 Diagramme de classes
+### 9.2 Diagramme de classes
 
 ![Diagramme de classes](uml/classes.png)
 
 Un `Evenement` est composé de ses invitations, de ses besoins et de ses messages, et agrège ses organisateurs. `Besoin` est abstraite et se spécialise en `Consommable` et `Materiel` (`MateriauSon`, `Lumiere`).
 
-### 8.3 Diagramme de séquence — Inviter une personne
+### 9.3 Diagramme de séquence — Inviter une personne
 
 ![Diagramme de séquence](uml/sequence-invitation.png)
 
@@ -232,20 +298,20 @@ Ce diagramme montre le trajet complet d'une requête : de l'interface JavaFX jus
 
 ---
 
-## 9. Planning prévisionnel (18 h)
+## 10. Planning prévisionnel (18 h)
 
-| Séance | Durée | Contenu                                                                      | Livrable                            |
-| ------ | ----- | ---------------------------------------------------------------------------- | ----------------------------------- |
-| 1      | 3 h   | Sujet, cahier des charges, UML                                               | **Étape 1 (ce document)**           |
-| 2      | 3 h   | Paquet `modele` (classes, héritage, règles métier) + schéma SQLite           | Modèle testé avec un `main` de test |
-| 3      | 3 h   | `reseau` + `serveur` : sockets, threads, `DepotSQLite`, bcrypt               | Serveur qui authentifie et répond   |
-| 4      | 3 h   | Paquet `client` : écrans JavaFX, toutes les requêtes P1                      | Démonstration à deux clients        |
-| 5      | 3 h   | Fonctionnalités P2 (messages, co-organisateurs, images), gestion des erreurs | Version complète                    |
-| 6      | 3 h   | Tests, corrections, README, préparation de la soutenance                     | Rendu final                         |
+| Séance | Durée | Contenu                                                                                   | Livrable                                 |
+| ------ | ----- | ----------------------------------------------------------------------------------------- | ---------------------------------------- |
+| 1      | 3 h   | Sujet, cahier des charges, UML                                                            | **Étape 1 (ce document)**                |
+| 2      | 3 h   | Base de données : MCD / MLD, `schema.sql`, index + `EXPLAIN`, transaction, `ConnexionBD`, `DepotJDBC` | **Jalon 2** : dossier `bdd/`, tag `jalon-2` |
+| 3      | 3 h   | Paquet `modele` et logique métier sur la base (`ServiceEvenements`, règles, exceptions)  | Règles métier testées avec un `main`     |
+| 4      | 3 h   | `reseau` + `serveur` : sockets, threads, protocole texte, bcrypt                         | Serveur qui authentifie et répond        |
+| 5      | 3 h   | Paquet `client` : écrans JavaFX, toutes les requêtes P1                                   | Démonstration à deux clients             |
+| 6      | 3 h   | Fonctionnalités P2, tests, README, préparation de la soutenance                           | Rendu final                              |
 
 ---
 
-## 10. Critères de validation
+## 11. Critères de validation
 
 Le projet est considéré comme réussi si le scénario suivant fonctionne avec un serveur et deux clients :
 

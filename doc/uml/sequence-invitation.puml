@@ -11,7 +11,7 @@ participant ":Client" as C
 participant ":GestionnaireClient" as GC
 participant ":ServiceEvenements" as S
 participant "e:Evenement" as E
-participant ":DepotSQLite" as D
+participant ":DepotJDBC" as D
 
 Organisateur -> IHM : clique sur « Inviter » (email)
 IHM -> C : envoyer(Requete INVITER)
@@ -31,7 +31,7 @@ else organisateur valide
   S -> E : inviter(personneConnectee, invite)
   E --> S : invitation (EN_ATTENTE)
   S -> D : enregistrerInvitation(idEvt, invitation)
-  note right of D : INSERT INTO invitation (JDBC)
+  note right of D : INSERT INTO invitation\n(PreparedStatement)
   S --> GC : invitation
   GC --> C : Reponse(succes=true, invitation)
 end
