@@ -1,0 +1,17 @@
+# Copiez ce fichier en db.properties et adaptez-le.
+# Ne versionnez JAMAIS db.properties (voir .gitignore) : seul l'exemple est dans le dépôt.
+
+# --- SQLite (par défaut, aucune installation) ---
+db.url=jdbc:sqlite:kit.db
+db.user=
+db.password=
+
+# --- MariaDB (via Docker Compose) ---
+# db.url=jdbc:mariadb://localhost:3306/maBase
+# db.user=app
+# db.password=changeme
+
+# --- PostgreSQL ---
+# db.url=jdbc:postgresql://localhost:5432/maBase
+# db.user=app
+# db.password=changeme
