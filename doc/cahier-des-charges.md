@@ -204,13 +204,9 @@ Les actions sensibles incluent toutes le cas « Vérifier les droits d'accès »
 
 ### 8.2 Diagramme de classes
 
-![Diagramme de classes — modèle métier](uml/classes-modele.png)
+![Diagramme de classes](uml/classes.png)
 
-Le modèle métier concentre l'héritage (`Evenement`, `Besoin`) et les règles d'encapsulation (changement de statut d'une invitation, attribution d'un besoin).
-
-![Diagramme de classes — réseau, serveur, client](uml/classes-architecture.png)
-
-Le serveur crée un `GestionnaireClient` par connexion ; toutes les vérifications de droits passent par `ServiceEvenements`.
+Un `Evenement` est composé de ses invitations, de ses besoins et de ses messages. `Besoin` est abstraite et se spécialise en `Consommable` et `Materiel` (`MateriauSon`, `Lumiere`).
 
 ### 8.3 Diagramme de séquence — Inviter un utilisateur
 

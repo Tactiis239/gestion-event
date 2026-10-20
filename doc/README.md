@@ -11,8 +11,7 @@
 | Diagramme | Source |
 |---|---|
 | Cas d'utilisation | `uml/cas-utilisation.puml` |
-| Classes : modèle métier | `uml/classes-modele.puml` |
-| Classes : réseau, serveur, client | `uml/classes-architecture.puml` |
+| Classes | `uml/classes.puml` |
 | Séquence : inviter un utilisateur | `uml/sequence-invitation.puml` |
 
 ## Régénérer les images

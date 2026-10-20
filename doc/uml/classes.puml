@@ -1,0 +1,116 @@
+@startuml classes
+
+class Evenement {
+  -id: int
+  -nom: String
+  -lieu: String
+  -prix: double
+  -logo: Image
+  -banniere: Image
+  -description: String
+  -dateEvenement: Date
+  -type: TypeEvenement
+  +inviter(appelant: Personne, p: Personne): void
+  +ajouterOrganisateur(p: Personne): void
+  +estOrganisateur(p: Personne): boolean
+  +ajouterBesoin(b: Besoin): void
+  +supprimerBesoin(b: Besoin): void
+  +envoyerMessage(m: Message): void
+  +getParticipants(): List<Personne>
+  +calculerBudget(): double
+}
+
+enum TypeEvenement {
+  ANNIVERSAIRE
+  MARIAGE
+  SOIREE
+  AUTRE
+}
+
+class Message {
+  -contenu: String
+  -date: Date
+  +getContenu(): String
+  +afficher(): String
+}
+
+class Invitation {
+  -statut: StatutInvitation
+  -dateInvitation: Date
+  +accepter(): void
+  +refuser(): void
+  +estAcceptee(): boolean
+}
+
+enum StatutInvitation {
+  EN_ATTENTE
+  ACCEPTEE
+  REFUSEE
+}
+
+abstract class Besoin {
+  -nom: String
+  -prix: double
+  -quantite: int
+  +acheter(p: Personne): void
+  +estAchete(): boolean
+  +calculerCout(): double
+}
+
+class Consommable {
+}
+
+abstract class Materiel
+
+class MaterielSon {
+  -decibels: int
+  -puissanceWatts: int
+}
+
+class MaterielLumiere {
+  -lumens: int
+  -couleur: String
+}
+
+class Personne {
+  -id: int
+  -nom: String
+  -prenom: String
+  -telephone: String
+  -avatar: Image
+  -email: String
+  -mdp: String
+  -dateNaissance: Date
+  +seConnecter(email: String, mdp: String): boolean
+  +getNomComplet(): String
+  +getAge(): int
+}
+
+Evenement "*" o-- "1..*" Personne : organisateurs
+Evenement "1" *-- "*" Invitation : invitations
+Evenement "1" *-- "*" Besoin : besoins
+Evenement "1" *-- "*" Message : messages
+
+Message "*" --> "1" Personne : envoyeur
+Message "*" --> "1" Personne : receveur
+Invitation "*" --> "1" Personne : invite
+Besoin "*" --> "0..1" Personne : acheteur
+
+Besoin <|-- Consommable
+Besoin <|-- Materiel
+Materiel <|-- MaterielSon
+Materiel <|-- MaterielLumiere
+
+note right of Evenement
+  **inviter()** : ne fonctionne que
+  si l'appelant est dans
+  la liste des organisateurs.
+  Si type = MARIAGE, un
+  budget traiteur (Consommable)
+  est ajouté aux besoins.
+end note
+
+note "acheteur = null →\nacheté par l'organisateur" as N2
+Besoin .. N2
+
+@enduml
