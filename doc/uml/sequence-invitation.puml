@@ -3,7 +3,7 @@ skinparam shadowing false
 skinparam monochrome true
 skinparam defaultFontName Helvetica
 
-title Diagramme de séquence — Inviter un utilisateur
+title Diagramme de séquence — Inviter une personne
 
 actor Organisateur
 participant ":ControleurEvenement" as IHM
@@ -13,21 +13,22 @@ participant ":ServiceEvenements" as S
 participant "e:Evenement" as E
 participant ":DepotSQLite" as D
 
-Organisateur -> IHM : clique sur « Inviter » (login)
+Organisateur -> IHM : clique sur « Inviter » (email)
 IHM -> C : envoyer(Requete INVITER)
 note right of IHM : dans une Task JavaFX
 C -> GC : writeObject(requete) via Socket
-GC -> S : inviter(utilisateurConnecte, idEvt, login)
+GC -> S : inviter(personneConnectee, idEvt, email)
 S -> D : trouverEvenement(idEvt)
 D --> S : e
-S -> S : verifierOrganisateur(u, e)
-alt l'utilisateur n'est pas l'organisateur
+S -> E : estOrganisateur(personneConnectee)
+E --> S : vrai / faux
+alt la personne n'est pas organisatrice
   S --> GC : AccesRefuseException
   GC --> C : Reponse(succes=false, "Accès refusé")
 else organisateur valide
-  S -> D : trouverUtilisateur(login)
+  S -> D : trouverPersonne(email)
   D --> S : invite
-  S -> E : inviter(invite)
+  S -> E : inviter(personneConnectee, invite)
   E --> S : invitation (EN_ATTENTE)
   S -> D : enregistrerInvitation(idEvt, invitation)
   note right of D : INSERT INTO invitation (JDBC)

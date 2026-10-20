@@ -1,22 +1,32 @@
 @startuml classes
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Helvetica
+skinparam classAttributeIconSize 0
 
-class Evenement {
+title Diagramme de classes — Modèle métier
+
+class Evenement <<Serializable>> {
   -id: int
   -nom: String
   -lieu: String
   -prix: double
-  -logo: Image
-  -banniere: Image
+  -logo: byte[]
+  -banniere: byte[]
   -description: String
-  -dateEvenement: Date
+  -dateEvenement: LocalDateTime
+  -capaciteMax: int
   -type: TypeEvenement
-  +inviter(appelant: Personne, p: Personne): void
-  +ajouterOrganisateur(p: Personne): void
+  +inviter(appelant: Personne, p: Personne): Invitation
+  +ajouterOrganisateur(appelant: Personne, p: Personne): void
   +estOrganisateur(p: Personne): boolean
+  +estParticipant(p: Personne): boolean
   +ajouterBesoin(b: Besoin): void
   +supprimerBesoin(b: Besoin): void
   +envoyerMessage(m: Message): void
   +getParticipants(): List<Personne>
+  +estComplet(): boolean
+  +besoinsSuggeres(): List<Besoin>
   +calculerBudget(): double
 }
 
@@ -27,16 +37,18 @@ enum TypeEvenement {
   AUTRE
 }
 
-class Message {
+class Message <<Serializable>> {
+  -id: int
   -contenu: String
-  -date: Date
+  -date: LocalDateTime
   +getContenu(): String
   +afficher(): String
 }
 
-class Invitation {
+class Invitation <<Serializable>> {
+  -id: int
   -statut: StatutInvitation
-  -dateInvitation: Date
+  -dateInvitation: LocalDateTime
   +accepter(): void
   +refuser(): void
   +estAcceptee(): boolean
@@ -48,40 +60,52 @@ enum StatutInvitation {
   REFUSEE
 }
 
-abstract class Besoin {
+abstract class Besoin <<Serializable>> {
+  -id: int
   -nom: String
   -prix: double
   -quantite: int
-  +acheter(p: Personne): void
-  +estAchete(): boolean
+  +attribuerA(p: Personne): void
+  +liberer(): void
+  +aUnAcheteur(): boolean
   +calculerCout(): double
+  +{abstract} getCategorie(): String
+  +{abstract} decrire(): String
 }
 
 class Consommable {
+  -unite: String
+  -perissable: boolean
+  +getCategorie(): String
+  +decrire(): String
 }
 
-abstract class Materiel
+abstract class Materiel {
+  -aRendre: boolean
+  -etat: String
+  +getCategorie(): String
+}
 
-class MaterielSon {
-  -decibels: int
+class MateriauSon {
   -puissanceWatts: int
+  +decrire(): String
 }
 
-class MaterielLumiere {
-  -lumens: int
+class Lumiere {
   -couleur: String
+  +decrire(): String
 }
 
-class Personne {
+class Personne <<Serializable>> {
   -id: int
   -nom: String
   -prenom: String
   -telephone: String
-  -avatar: Image
+  -avatar: byte[]
   -email: String
-  -mdp: String
-  -dateNaissance: Date
-  +seConnecter(email: String, mdp: String): boolean
+  -mdpHash: String
+  -dateNaissance: LocalDate
+  +verifierMotDePasse(mdp: String): boolean
   +getNomComplet(): String
   +getAge(): int
 }
@@ -98,19 +122,19 @@ Besoin "*" --> "0..1" Personne : acheteur
 
 Besoin <|-- Consommable
 Besoin <|-- Materiel
-Materiel <|-- MaterielSon
-Materiel <|-- MaterielLumiere
+Materiel <|-- MateriauSon
+Materiel <|-- Lumiere
 
 note right of Evenement
   **inviter()** : ne fonctionne que
-  si l'appelant est dans
-  la liste des organisateurs.
-  Si type = MARIAGE, un
-  budget traiteur (Consommable)
-  est ajouté aux besoins.
+  si l'appelant est un organisateur
+  et si l'événement n'est pas complet.
+  **besoinsSuggeres()** : si type = MARIAGE,
+  un budget traiteur (Consommable)
+  est proposé à la création.
 end note
 
-note "acheteur = null →\nacheté par l'organisateur" as N2
+note "acheteur = null →\nà la charge des organisateurs" as N2
 Besoin .. N2
 
 @enduml
