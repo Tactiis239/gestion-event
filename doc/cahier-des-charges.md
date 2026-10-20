@@ -95,7 +95,7 @@ Priorités : **P1** = indispensable à la démonstration, **P2** = prévu, réal
 
 | ID  | Exigence                                                                                                                                                                                    | Priorité |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| F5  | Une personne connectée crée un événement d'un type donné (anniversaire, mariage, soirée, autre) avec nom, description, date, lieu, capacité maximale et prix. Elle en devient organisatrice. | P1       |
+| F5  | Une personne connectée crée un événement d'un type donné (anniversaire, mariage, soirée, autre) avec nom, description, date, lieu, capacité maximale et prix de participation. Elle en devient organisatrice. | P1       |
 | F6  | La personne voit la liste des événements qu'elle organise et de ceux auxquels elle est invitée.                                                                                             | P1       |
 | F7  | Un organisateur modifie les informations de l'événement.                                                                                                                                    | P2       |
 | F8  | Un organisateur supprime l'événement (invitations, besoins et messages associés sont supprimés).                                                                                            | P2       |

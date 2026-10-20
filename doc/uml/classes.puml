@@ -128,7 +128,7 @@ Materiel <|-- Lumiere
 note right of Evenement
   **inviter()** : ne fonctionne que
   si l'appelant est un organisateur
-  et si l'événement n'est pas complet.
+  et si la personne n'est pas déjà invitée.
   **besoinsSuggeres()** : si type = MARIAGE,
   un budget traiteur (Consommable)
   est proposé à la création.

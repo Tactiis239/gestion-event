@@ -1,6 +1,6 @@
 # Gestion d'événements
 
-Application client/serveur en Java pour organiser des événements (anniversaires, soirées, réunions) :
+Application client/serveur en Java pour organiser des événements (anniversaires, mariages, soirées…) :
 invitations, réponses des invités et répartition des besoins (« qui apporte quoi ? »).
 
 Projet de POO Java, 3A FISA Info, groupe G1.
