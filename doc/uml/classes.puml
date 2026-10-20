@@ -6,7 +6,7 @@ skinparam classAttributeIconSize 0
 
 title Diagramme de classes — Modèle métier
 
-class Evenement <<Serializable>> {
+class Evenement {
   -id: int
   -nom: String
   -lieu: String
@@ -37,7 +37,7 @@ enum TypeEvenement {
   AUTRE
 }
 
-class Message <<Serializable>> {
+class Message {
   -id: int
   -contenu: String
   -date: LocalDateTime
@@ -45,7 +45,7 @@ class Message <<Serializable>> {
   +afficher(): String
 }
 
-class Invitation <<Serializable>> {
+class Invitation {
   -id: int
   -statut: StatutInvitation
   -dateInvitation: LocalDateTime
@@ -60,7 +60,7 @@ enum StatutInvitation {
   REFUSEE
 }
 
-abstract class Besoin <<Serializable>> {
+abstract class Besoin {
   -id: int
   -nom: String
   -prix: double
@@ -96,7 +96,7 @@ class Lumiere {
   +decrire(): String
 }
 
-class Personne <<Serializable>> {
+class Personne {
   -id: int
   -nom: String
   -prenom: String

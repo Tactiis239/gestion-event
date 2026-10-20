@@ -16,7 +16,7 @@ participant ":DepotSQLite" as D
 Organisateur -> IHM : clique sur « Inviter » (email)
 IHM -> C : envoyer(Requete INVITER)
 note right of IHM : dans une Task JavaFX
-C -> GC : writeObject(requete) via Socket
+C -> GC : envoie la requête (ligne de texte) via Socket
 GC -> S : inviter(personneConnectee, idEvt, email)
 S -> D : trouverEvenement(idEvt)
 D --> S : e

@@ -67,12 +67,12 @@ Le volume horaire imparti (18 heures cumulées) délimite strictement le périm�
 | Langage            | Java 17                                                 | Imposé par le module ; `record`, `switch` modernes disponibles.                            |
 | Build              | Maven (`pom.xml`)                                       | Compilation et dépendances identiques sur toutes les machines du groupe.                   |
 | Bibliothèques      | `sqlite-jdbc`, `jBCrypt`, JavaFX (`org.openjfx`)        | Les seules dépendances du projet ; SQLite et bcrypt sont demandés par l'enseignant.        |
-| Réseau             | Sockets TCP (`ServerSocket` / `Socket`) + flux d'objets | Plus simple qu'une API REST et directement lié au cours. Un thread par client connecté.    |
-| Échanges           | Objets `Requete` / `Reponse` sérialisés                 | Protocole typé, pas de parsing de texte à écrire.                                          |
+| Réseau             | Sockets TCP (`ServerSocket` / `Socket`) + flux texte    | Plus simple qu'une API REST et directement lié au cours. Un thread par client connecté.    |
+| Échanges           | Une ligne de texte par `Requete` / `Reponse` (`PrintWriter` / `BufferedReader`) | Protocole simple et lisible, testable à la main ; pas de sérialisation Java. |
 | Persistance        | Base SQLite accédée en JDBC (`sqlite-jdbc`)             | Données conservées entre deux lancements, dans un seul fichier, sans serveur à installer.  |
 | Interface          | JavaFX (vues FXML + contrôleurs)                        | Interface graphique claire ; la séparation vue / contrôleur reste lisible en POO.          |
 | Mots de passe      | Hachés avec bcrypt (`jBCrypt`)                          | Jamais stockés en clair ; bcrypt intègre un sel et un coût réglable contre la force brute. |
-| Images             | Logo, bannière et avatar stockés en `byte[]` (BLOB)     | Sérialisables pour le réseau et stockables directement dans SQLite.                        |
+| Images             | Logo, bannière et avatar stockés en `byte[]` (BLOB)     | Stockés directement dans SQLite ; encodés en Base64 pour passer dans le flux texte.       |
 | Dates              | `LocalDate` / `LocalDateTime` (`java.time`)             | API moderne et immuable, plus sûre que `java.util.Date`.                                   |
 | Gestion de version | Git, un dépôt partagé                                   | Travail en groupe et historique des contributions.                                         |
 
@@ -222,7 +222,7 @@ Les actions sensibles incluent toutes le cas « Vérifier les droits d'accès »
 
 ![Diagramme de classes](uml/classes.png)
 
-Un `Evenement` est composé de ses invitations, de ses besoins et de ses messages, et agrège ses organisateurs. `Besoin` est abstraite et se spécialise en `Consommable` et `Materiel` (`MateriauSon`, `Lumiere`). Les classes échangées sur le réseau sont `Serializable`.
+Un `Evenement` est composé de ses invitations, de ses besoins et de ses messages, et agrège ses organisateurs. `Besoin` est abstraite et se spécialise en `Consommable` et `Materiel` (`MateriauSon`, `Lumiere`).
 
 ### 8.3 Diagramme de séquence — Inviter une personne
 
