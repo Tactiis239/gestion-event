@@ -1,0 +1,160 @@
+@startuml classes-architecture
+!pragma layout smetana
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Helvetica
+skinparam classAttributeIconSize 0
+hide empty members
+
+title Diagramme de classes (2/2) — Réseau, serveur, client
+
+package "reseau" {
+  class Requete <<Serializable>> {
+    - type : TypeRequete
+    - jetonSession : String
+    - parametres : Map<String, Object>
+  }
+
+  class Reponse <<Serializable>> {
+    - succes : boolean
+    - message : String
+    - donnees : Object
+  }
+
+  enum TypeRequete {
+    CONNEXION
+    DECONNEXION
+    LISTER_EVENEMENTS
+    CREER_EVENEMENT
+    MODIFIER_EVENEMENT
+    SUPPRIMER_EVENEMENT
+    INVITER
+    LISTER_INVITATIONS
+    REPONDRE_INVITATION
+    LISTER_BESOINS
+    AJOUTER_BESOIN
+    ATTRIBUER_BESOIN
+    PRENDRE_BESOIN
+  }
+}
+
+package "serveur" {
+  class Serveur {
+    - port : int
+    - serverSocket : ServerSocket
+    + demarrer() : void
+    + arreter() : void
+  }
+
+  class GestionnaireClient <<Runnable>> {
+    - socket : Socket
+    - utilisateurConnecte : Utilisateur
+    + run() : void
+    - traiter(r : Requete) : Reponse
+  }
+
+  class ServiceEvenements {
+    + authentifier(login : String, mdp : String) : String
+    + listerEvenements(u : Utilisateur) : List<Evenement>
+    + creerEvenement(org : Utilisateur, e : Evenement) : Evenement
+    + modifierEvenement(org : Utilisateur, e : Evenement) : void
+    + supprimerEvenement(org : Utilisateur, idEvt : int) : void
+    + inviter(org : Utilisateur, idEvt : int, login : String) : Invitation
+    + listerInvitations(u : Utilisateur) : List<Invitation>
+    + repondre(inv : Utilisateur, idInv : int, accepte : boolean) : void
+    + listerBesoins(u : Utilisateur, idEvt : int) : List<Besoin>
+    + ajouterBesoin(org : Utilisateur, idEvt : int, b : Besoin) : void
+    + attribuerBesoin(u : Utilisateur, idBesoin : int, cible : Utilisateur) : void
+    + prendreBesoin(u : Utilisateur, idBesoin : int) : void
+    - verifierOrganisateur(u : Utilisateur, e : Evenement) : void
+  }
+
+  interface Depot {
+    + trouverUtilisateur(login : String) : Utilisateur
+    + listerEvenements(u : Utilisateur) : List<Evenement>
+    + trouverEvenement(id : int) : Evenement
+    + enregistrerEvenement(e : Evenement) : void
+    + supprimerEvenement(id : int) : void
+    + enregistrerInvitation(idEvt : int, i : Invitation) : void
+    + enregistrerBesoin(idEvt : int, b : Besoin) : void
+  }
+
+  class DepotSQLite {
+    - url : String
+    - connexion : Connection
+    + DepotSQLite(cheminBase : String)
+    - creerTables() : void
+    - insererComptesDeTest() : void
+  }
+
+  class AccesRefuseException
+  class AuthentificationException
+}
+
+package "client" {
+  class Client {
+    - socket : Socket
+    - out : ObjectOutputStream
+    - in : ObjectInputStream
+    - jetonSession : String
+    + connecter(hote : String, port : int) : void
+    + envoyer(r : Requete) : Reponse
+    + fermer() : void
+  }
+
+  class ApplicationClient <<Application>> {
+    - client : Client
+    + start(fenetre : Stage) : void
+    + afficherEcran(fxml : String) : void
+  }
+
+  class ControleurConnexion {
+    - client : Client
+    + seConnecter() : void
+  }
+
+  class ControleurEvenements {
+    - client : Client
+    + actualiser() : void
+    + creerEvenement() : void
+    + ouvrirEvenement() : void
+    + seDeconnecter() : void
+  }
+
+  class ControleurEvenement {
+    - client : Client
+    - evenement : Evenement
+    + inviter() : void
+    + repondreInvitation() : void
+    + ajouterBesoin() : void
+    + prendreBesoin() : void
+    + actualiser() : void
+  }
+}
+
+
+package "modele" {
+  abstract class Evenement
+  class Utilisateur
+}
+Depot <|.. DepotSQLite
+Serveur "1" o-- "*" GestionnaireClient : crée un thread par client
+GestionnaireClient --> ServiceEvenements
+GestionnaireClient ..> Requete : reçoit
+GestionnaireClient ..> Reponse : renvoie
+GestionnaireClient --> Utilisateur : utilisateurConnecte
+ServiceEvenements --> Depot
+ServiceEvenements ..> AccesRefuseException : lève
+ServiceEvenements ..> AuthentificationException : lève
+DepotSQLite ..> Evenement : lit / écrit
+DepotSQLite ..> Utilisateur : lit / écrit
+ApplicationClient --> Client
+ApplicationClient ..> ControleurConnexion : charge
+ApplicationClient ..> ControleurEvenements : charge
+ApplicationClient ..> ControleurEvenement : charge
+ControleurConnexion --> Client
+ControleurEvenements --> Client
+ControleurEvenement --> Client
+Client ..> Requete : envoie
+Client ..> Reponse : reçoit
+@enduml

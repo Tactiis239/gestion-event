@@ -1,0 +1,109 @@
+@startuml classes-modele
+!pragma layout smetana
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Helvetica
+skinparam classAttributeIconSize 0
+hide empty members
+
+title Diagramme de classes (1/2) — Modèle métier
+
+package "modele" {
+  class Utilisateur <<Serializable>> {
+    - id : int
+    - login : String
+    - motDePasseHash : String
+    - nom : String
+    - email : String
+    + verifierMotDePasse(mdp : String) : boolean
+  }
+
+  abstract class Evenement <<Serializable>> {
+    - id : int
+    - titre : String
+    - description : String
+    - date : LocalDateTime
+    - lieu : String
+    - capaciteMax : int
+    + estOrganisePar(u : Utilisateur) : boolean
+    + inviter(u : Utilisateur) : Invitation
+    + ajouterBesoin(b : Besoin) : void
+    + getParticipants() : List<Utilisateur>
+    + estComplet() : boolean
+    + {abstract} getType() : String
+    + {abstract} besoinsSuggeres() : List<Besoin>
+  }
+
+  class Anniversaire {
+    - personneFetee : String
+    - age : int
+    + getType() : String
+    + besoinsSuggeres() : List<Besoin>
+  }
+
+  class Soiree {
+    - theme : String
+    - alcoolAutorise : boolean
+    + getType() : String
+    + besoinsSuggeres() : List<Besoin>
+  }
+
+  class Reunion {
+    - ordreDuJour : String
+    - enLigne : boolean
+    + getType() : String
+    + besoinsSuggeres() : List<Besoin>
+  }
+
+  class Invitation <<Serializable>> {
+    - id : int
+    - dateEnvoi : LocalDateTime
+    - statut : StatutInvitation
+    + accepter() : void
+    + refuser() : void
+    + estAcceptee() : boolean
+  }
+
+  enum StatutInvitation {
+    EN_ATTENTE
+    ACCEPTEE
+    REFUSEE
+  }
+
+  abstract class Besoin <<Serializable>> {
+    - id : int
+    - libelle : String
+    - quantite : int
+    + attribuerA(u : Utilisateur) : void
+    + liberer() : void
+    + estCouvert() : boolean
+    + {abstract} getCategorie() : String
+    + {abstract} decrire() : String
+  }
+
+  class Consommable {
+    - unite : String
+    - perissable : boolean
+    + getCategorie() : String
+    + decrire() : String
+  }
+
+  class Materiel {
+    - aRendre : boolean
+    - etat : String
+    + getCategorie() : String
+    + decrire() : String
+  }
+}
+
+Evenement <|-- Anniversaire
+Evenement <|-- Soiree
+Evenement <|-- Reunion
+Besoin <|-- Consommable
+Besoin <|-- Materiel
+Evenement "*" --> "1" Utilisateur : organisateur >
+Evenement "1" *-- "*" Invitation : invitations
+Invitation "*" --> "1" Utilisateur : invite >
+Evenement "1" *-- "*" Besoin : besoins
+Besoin "*" --> "0..1" Utilisateur : responsable >
+@enduml
