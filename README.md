@@ -19,20 +19,6 @@ mvn compile exec:java
 
 `MainTestBDD` recrée la base SQLite à partir des scripts SQL et vérifie que l'accès aux données fonctionne.
 
-## Organisation
-
-```
-src/main/java/
-├── modele/     objets métier
-├── serveur/    accès à la base (connexion, DAO, services)
-├── reseau/     échanges client/serveur (à venir)
-└── client/     interface utilisateur (à venir)
-src/main/resources/
-├── schema.sql, donnees_test.sql
-└── db.properties.example
-bdd/            MCD, MLD, optimisation
-```
-
 ## Configuration
 
 Les paramètres de connexion sont dans `db.properties`, qui n'est pas versionné.
