@@ -1,8 +1,8 @@
 # Cahier des charges — Application de gestion d'événements
 
-**Module :** Programmation Orientée Objet (Java)
-**Rendu :** Étape 1 — Sujet, cahier des charges, description, conception UML
-**Formation :** 3A FISA Informatique — groupe G1
+**Module :** Programmation Orientée Objet (Java)  
+**Rendu :** Étape 1 — Sujet, cahier des charges, description, conception UML  
+**Formation :** 3A FISA Informatique — groupe G1  
 **Membres :** Vince BONIFACE, Théo MARTIN, Romain NOTTEAU, Lony MICHAUX
 
 ---
@@ -240,6 +240,7 @@ Toute la hiérarchie `Besoin` (`Consommable`, `MaterielSon`, `MaterielLumiere`) 
 | `UNIQUE (id_evenement, id_personne)` sur `invitation`                          | Pas de double invitation (F14) |
 | `CHECK (statut IN ('EN_ATTENTE', 'ACCEPTEE', 'REFUSEE'))`                      | Enum `StatutInvitation`      |
 | `CHECK (type IN ('ANNIVERSAIRE', 'MARIAGE', 'SOIREE', 'AUTRE'))`               | Enum `TypeEvenement`         |
+| `CHECK (type IN ('CONSOMMABLE', 'MATERIEL_SON', 'MATERIEL_LUMIERE'))` sur `besoin` | Hiérarchie `Besoin` (8.2) |
 | `CHECK (prix >= 0)`, `CHECK (quantite > 0)`        | Valeurs métier valides       |
 
 ### 8.4 Données non stockées
@@ -279,7 +280,7 @@ Les sources PlantUML (`.puml`) et les images sont dans le dossier `uml/`.
 
 ![Diagramme de cas d'utilisation](uml/cas-utilisation.png)
 
-Les actions sensibles incluent toutes le cas « Vérifier les droits d'accès », réalisé côté serveur par `ServiceEvenements`.
+Les actions sensibles incluent toutes le cas « Vérifier les droits d'accès », réalisé côté serveur : par `ServiceEvenements`, ou directement par le modèle quand la règle y est portée (`Evenement.inviter()` vérifie que l'appelant est organisateur, voir 9.3).
 
 ### 9.2 Diagramme de classes
 
@@ -316,5 +317,5 @@ Le projet est considéré comme réussi si le scénario suivant fonctionne avec 
 2. Alice invite Bob ; Bob voit l'invitation et l'accepte.
 3. Alice ajoute deux besoins : « 6 bouteilles de jus » (consommable, 2 € l'unité) et « 1 enceinte » (matériel son, 30 €).
 4. Bob prend en charge l'enceinte ; Alice voit, après actualisation, que Bob l'achète et que le budget total est de 42 €.
-5. Bob tente de modifier la soirée d'Alice : le serveur refuse avec « Accès refusé ».
+5. Bob tente d'inviter quelqu'un à la soirée d'Alice : le serveur refuse avec « Accès refusé ».
 6. Le serveur est redémarré : la soirée, l'invitation et les besoins sont toujours là (lus depuis la base SQLite).
