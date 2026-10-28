@@ -1,0 +1,42 @@
+@startuml sequence-invitation
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Helvetica
+
+title Diagramme de séquence — Inviter une personne
+
+actor Organisateur
+participant ":ControleurEvenement" as IHM
+participant ":Client" as C
+participant ":GestionnaireClient" as GC
+participant ":ServiceEvenements" as S
+participant "e:Evenement" as E
+participant ":DepotJDBC" as D
+
+Organisateur -> IHM : clique sur « Inviter » (email)
+IHM -> C : envoyer(Requete INVITER)
+note right of IHM : dans une Task JavaFX
+C -> GC : envoie la requête (ligne de texte) via Socket
+GC -> S : inviter(personneConnectee, idEvt, email)
+S -> D : trouverEvenement(idEvt)
+D --> S : e
+S -> D : trouverPersonne(email)
+D --> S : p
+S -> E : inviter(personneConnectee, p)
+E -> E : estOrganisateur(personneConnectee)
+alt la personne connectée n'est pas organisatrice
+  E --> S : AccesRefuseException
+  S --> GC : AccesRefuseException
+  GC --> C : Reponse(succes=false, "Accès refusé")
+else organisateur valide
+  create participant "i:Invitation" as I
+  E -> I : new Invitation(p)
+  note right of I : statut = EN_ATTENTE
+  S -> D : enregistrerInvitation(idEvt, p)
+  note right of D : INSERT INTO invitation\n(PreparedStatement)
+  S --> GC : ok
+  GC --> C : Reponse(succes=true)
+end
+C --> IHM : reponse
+IHM --> Organisateur : affiche le résultat (Platform.runLater)
+@enduml

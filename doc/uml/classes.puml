@@ -1,0 +1,136 @@
+@startuml classes
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Helvetica
+skinparam classAttributeIconSize 0
+
+title Diagramme de classes — Modèle métier
+
+class Evenement {
+  -id: int
+  -nom: String
+  -lieu: String
+  -prix: double
+  -logo: byte[]
+  -banniere: byte[]
+  -description: String
+  -dateEvenement: LocalDateTime
+  -type: TypeEvenement
+  +inviter(appelant: Personne, p: Personne): void
+  +ajouterOrganisateur(appelant: Personne, p: Personne): void
+  +estOrganisateur(p: Personne): boolean
+  +ajouterBesoin(b: Besoin): void
+  +supprimerBesoin(b: Besoin): void
+  +envoyerMessage(m: Message): void
+  +getParticipants(): List<Personne>
+  +calculerBudget(): double
+}
+
+enum TypeEvenement {
+  ANNIVERSAIRE
+  MARIAGE
+  SOIREE
+  AUTRE
+}
+
+class Message {
+  -id: int
+  -contenu: String
+  -date: LocalDateTime
+  +getContenu(): String
+  +afficher(): String
+}
+
+class Invitation {
+  -id: int
+  -statut: StatutInvitation
+  -dateInvitation: LocalDateTime
+  +accepter(): void
+  +refuser(): void
+  +estAcceptee(): boolean
+}
+
+enum StatutInvitation {
+  EN_ATTENTE
+  ACCEPTEE
+  REFUSEE
+}
+
+enum EtatMateriel {
+  NEUF
+  BON
+  USE
+  HORS_SERVICE
+}
+
+abstract class Besoin {
+  -id: int
+  -nom: String
+  -prix: double
+  -quantite: int
+  +acheter(p: Personne): void
+  +estAchete(): boolean
+  +calculerCout(): double
+}
+
+class Consommable {
+  -perissable: boolean
+}
+
+abstract class Materiel {
+  -aRendre: boolean
+  -etat: EtatMateriel
+}
+
+class MaterielSon {
+  -decibels: int
+  -puissanceWatts: int
+}
+
+class MaterielLumiere {
+  -lumens: int
+  -couleur: String
+}
+
+class Personne {
+  -id: int
+  -nom: String
+  -prenom: String
+  -telephone: String
+  -avatar: byte[]
+  -email: String
+  -mdpHash: String
+  -dateNaissance: LocalDate
+  +seConnecter(email: String, mdp: String): boolean
+  +getNomComplet(): String
+  +getAge(): int
+}
+
+Evenement "*" o-- "1..*" Personne : organisateurs
+Evenement "1" *-- "*" Invitation : invitations
+Evenement "1" *-- "*" Besoin : besoins
+Evenement "1" *-- "*" Message : messages
+
+Message "*" --> "1" Personne : envoyeur
+Message "*" --> "1" Personne : receveur
+Invitation "*" --> "1" Personne : invite
+Besoin "*" --> "0..1" Personne : acheteur
+
+Besoin <|-- Consommable
+Besoin <|-- Materiel
+Materiel <|-- MaterielSon
+Materiel <|-- MaterielLumiere
+
+note right of Evenement
+  **inviter()**, **ajouterOrganisateur()** :
+  ne fonctionnent que si l'appelant
+  est dans la liste des organisateurs.
+  **Création** : si type = MARIAGE,
+  un budget traiteur (Consommable)
+  est ajouté une fois aux besoins.
+end note
+
+note "acheteur = null →\nacheté par les organisateurs\n**estAchete()** : acheteur ≠ null" as N2
+Besoin .. N2
+
+@enduml

@@ -1,0 +1,84 @@
+@startuml cas-utilisation
+!pragma layout smetana
+left to right direction
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam monochrome true
+skinparam defaultFontName Helvetica
+
+title Diagramme de cas d'utilisation — Gestion d'événements
+
+actor "Visiteur" as V
+actor "Utilisateur\nconnecté" as U
+actor "Organisateur" as O
+actor "Invité" as I
+
+V <|-- U
+U <|-- O
+U <|-- I
+
+rectangle "Application de gestion d'événements" {
+  usecase "Se connecter" as UC1
+  usecase "Se déconnecter" as UC2
+  usecase "Consulter ses événements" as UC3
+
+  usecase "Créer un événement" as UC4
+  usecase "Modifier un événement" as UC5
+  usecase "Supprimer un événement" as UC6
+  usecase "Inviter une personne" as UC7
+  usecase "Suivre les réponses\naux invitations" as UC8
+  usecase "Définir un besoin\n(matériel / consommable)" as UC9
+  usecase "Attribuer un besoin\nà un participant" as UC10
+  usecase "Ajouter un\nco-organisateur" as UC15
+
+  usecase "Consulter ses invitations" as UC11
+  usecase "Accepter / refuser\nune invitation" as UC12
+  usecase "Prendre en charge\nun besoin" as UC13
+  usecase "Consulter les besoins\nd'un événement" as UC14
+  usecase "Envoyer un message\nà un participant" as UC16
+  usecase "Consulter ses messages" as UC17
+
+  usecase "Vérifier les droits\nd'accès" as UCD
+}
+
+V --> UC1
+U --> UC2
+U --> UC3
+U --> UC4
+U --> UC14
+U --> UC16
+U --> UC17
+
+O --> UC5
+O --> UC6
+O --> UC7
+O --> UC8
+O --> UC9
+O --> UC10
+O --> UC15
+
+I --> UC11
+I --> UC12
+I --> UC13
+
+UC5 ..> UCD : <<include>>
+UC6 ..> UCD : <<include>>
+UC7 ..> UCD : <<include>>
+UC9 ..> UCD : <<include>>
+UC10 ..> UCD : <<include>>
+UC12 ..> UCD : <<include>>
+UC13 ..> UCD : <<include>>
+UC8 ..> UCD : <<include>>
+UC14 ..> UCD : <<include>>
+UC15 ..> UCD : <<include>>
+UC16 ..> UCD : <<include>>
+
+note right of UCD
+  Organisateurs : seuls à modifier ou supprimer l'événement,
+  inviter, ajouter un co-organisateur et gérer les besoins.
+  Invité : n'agit que sur ses propres invitations ;
+  ne prend un besoin que s'il a accepté.
+  Messages : uniquement entre participants
+  d'un même événement.
+end note
+@enduml
