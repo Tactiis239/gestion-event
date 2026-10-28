@@ -117,7 +117,7 @@ Priorités : **P1** = MVP, indispensable à la démonstration ; **P2** = prévu,
 
 | ID  | Exigence                                                                                                                                                                                                                  | Priorité |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| F17 | Un organisateur ajoute ou supprime un besoin (nom, prix unitaire, quantité) : **consommable** ou **matériel**, décliné en **matériel son** (décibels, puissance) ou **matériel lumière** (lumens, couleur). | P1       |
+| F17 | Un organisateur ajoute ou supprime un besoin (nom, prix unitaire, quantité) : **consommable** (périssable ou non) ou **matériel** (à rendre ou non, état), décliné en **matériel son** (décibels, puissance) ou **matériel lumière** (lumens, couleur). | P1       |
 | F18 | Un organisateur attribue l'achat d'un besoin à un participant (`acheter()`).                                                                                                                                                            | P1       |
 | F19 | Un invité ayant **accepté** l'invitation peut prendre en charge lui-même un besoin sans acheteur.                                                                                                                         | P1       |
 | F20 | Un besoin n'est attribué qu'à un participant (organisateur ou invité ayant accepté). Si un invité refuse après coup, ses besoins n'ont plus d'acheteur.                                                               | P2       |
@@ -219,7 +219,7 @@ Clés primaires notées `PK`, clés étrangères notées `#`.
 | `evenement`    | `id` PK, `nom` NOT NULL, `lieu`, `prix`, `logo` (BLOB), `banniere` (BLOB), `description`, `date_evenement` NOT NULL, `type`                  | Classe `Evenement` + enum `TypeEvenement`  |
 | `organisateur` | `#id_evenement`, `#id_personne` — PK composée                                                                                                                  | Lien N–N `organisateurs` → table de jonction |
 | `invitation`   | `id` PK, `#id_evenement`, `#id_personne`, `statut`, `date_invitation` — UNIQUE (`id_evenement`, `id_personne`)                                               | Classe `Invitation` (lien 1–N `invitations`) |
-| `besoin`       | `id` PK, `#id_evenement`, `#id_acheteur` (NULL possible), `type`, `nom`, `prix`, `quantite`, `decibels`, `puissance_watts`, `lumens`, `couleur` | Hiérarchie `Besoin` (table unique)         |
+| `besoin`       | `id` PK, `#id_evenement`, `#id_acheteur` (NULL possible), `type`, `nom`, `prix`, `quantite`, `perissable`, `a_rendre`, `etat`, `decibels`, `puissance_watts`, `lumens`, `couleur` | Hiérarchie `Besoin` (table unique)         |
 | `message`      | `id` PK, `#id_evenement`, `#id_envoyeur`, `#id_receveur`, `contenu` NOT NULL, `date_envoi` NOT NULL (attribut `date`)                                                           | Classe `Message`                           |
 
 Les compositions de l'UML (`Invitation`, `Besoin`, `Message` dans `Evenement`) se traduisent par `ON DELETE CASCADE` sur `id_evenement` (F8). Les clés étrangères sont activées à chaque connexion (`PRAGMA foreign_keys = ON`, désactivé par défaut dans SQLite).

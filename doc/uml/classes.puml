@@ -67,9 +67,13 @@ abstract class Besoin {
 }
 
 class Consommable {
+  -perissable: boolean
 }
 
-abstract class Materiel
+abstract class Materiel {
+  -aRendre: boolean
+  -etat: String
+}
 
 class MaterielSon {
   -decibels: int
