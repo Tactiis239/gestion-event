@@ -17,8 +17,6 @@ public class Evenement {
     private List<Message> message;
     private List<Besoin> besoin;
     private List<Invitation> invitation;
-    private List<Organisateur> organisateurs;
-
 
 
 
@@ -75,9 +73,6 @@ public class Evenement {
         return type;
     }
 
-    public Invitation inviter(Personne appelant, Personne invite) {
-        return new Invitation(this, appelant, invite);
-    }
 
     public void ajouterOrganisateur(Personne appelant, Personne organisateur) {
         // Logique pour ajouter un utilisateur à l'événement
@@ -104,7 +99,7 @@ public class Evenement {
     public void envoyerMessage(Personne appelant, String message) {
         // Logique pour envoyer un message à tous les participants de l'événement
     }
-    public void envoyerInvitation(Personne appelant, String message) {
+    public void inviter(Personne appelant, String message) {
         // Logique pour envoyer un message à tous les participants de l'événement
     }
 }
