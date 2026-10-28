@@ -100,37 +100,37 @@ Priorités : **P1** = MVP, indispensable à la démonstration ; **P2** = prévu,
 | F6  | La personne voit la liste des événements qu'elle organise et de ceux auxquels elle est invitée.                                                                                             | P1       |
 | F7  | Un organisateur modifie les informations de l'événement.                                                                                                                                    | P2       |
 | F8  | Un organisateur supprime l'événement (invitations, besoins et messages associés sont supprimés).                                                                                            | P2       |
-| F9  | À la création d'un mariage, un budget traiteur (`Consommable`) est ajouté une fois à ses besoins ; l'organisateur peut le supprimer s'il n'en veut pas.                                | P3       |
-| F10 | Un organisateur ajoute un co-organisateur parmi les personnes existantes (sinon `AccesRefuseException`).                                                                                                                   | P2       |
+| F9  | À la création d'un mariage, un budget traiteur (`Consommable`) est ajouté une fois à ses besoins ; un organisateur peut le supprimer s'il n'en veut pas.                                | P3       |
+| F10 | Un organisateur ajoute un co-organisateur parmi les personnes existantes (`ajouterOrganisateur()`, sinon `AccesRefuseException`).                                                                                                                   | P2       |
 | F11 | Un organisateur ajoute un logo et une bannière à l'événement ; chaque personne peut avoir un avatar (fourni dans les données de test).                                                                                        | P3       |
 
 ### 4.3 Invitations
 
 | ID  | Exigence                                                                                                                     | Priorité |
 | --- | ---------------------------------------------------------------------------------------------------------------------------- | -------- |
-| F12 | Un organisateur invite une personne existante (par son e-mail). L'invitation est créée avec le statut `EN_ATTENTE`.          | P1       |
-| F13 | Seul un organisateur de l'événement peut y inviter quelqu'un (sinon `AccesRefuseException`).                                 | P1       |
+| F12 | Un organisateur invite une personne existante (par son e-mail). L'invitation est créée avec le statut `EN_ATTENTE` (`inviter()`).          | P1       |
+| F13 | Seul un organisateur de l'événement peut y inviter quelqu'un (`estOrganisateur()`, sinon `AccesRefuseException`).                                 | P1       |
 | F14 | Une même personne ne peut pas être invitée deux fois au même événement.                                                      | P1       |
-| F15 | L'invité consulte ses invitations et les accepte ou les refuse. | P1       |
+| F15 | L'invité consulte ses invitations et les accepte ou les refuse (`accepter()`, `refuser()`). | P1       |
 | F16 | Les organisateurs voient l'état de chaque invitation (en attente, acceptée, refusée).                                        | P1       |
 
 ### 4.4 Besoins et budget (héritage / polymorphisme)
 
 | ID  | Exigence                                                                                                                                                                                                                  | Priorité |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| F17 | Un organisateur ajoute ou supprime un besoin (nom, prix unitaire, quantité) : **consommable** (périssable ou non) ou **matériel** (à rendre ou non, état : neuf, bon, usé, hors service), décliné en **matériel son** (décibels, puissance) ou **matériel lumière** (lumens, couleur). | P1       |
+| F17 | Un organisateur ajoute ou supprime un besoin (`ajouterBesoin()`, `supprimerBesoin()` ; nom, prix unitaire, quantité) : **consommable** (périssable ou non) ou **matériel** (à rendre ou non, état : neuf, bon, usé, hors service), décliné en **matériel son** (décibels, puissance) ou **matériel lumière** (lumens, couleur). | P1       |
 | F18 | Un organisateur attribue l'achat d'un besoin à un participant (`acheter()`).                                                                                                                                                            | P1       |
-| F19 | Un invité ayant **accepté** l'invitation peut prendre en charge lui-même un besoin sans acheteur.                                                                                                                         | P1       |
+| F19 | Un invité ayant **accepté** l'invitation (`estAcceptee()`) peut prendre en charge lui-même un besoin sans acheteur.                                                                                                                         | P1       |
 | F20 | L'invité peut changer d'avis tant que l'événement n'est pas passé ; s'il refuse après avoir accepté, ses besoins n'ont plus d'acheteur (règle 3).                                                               | P2       |
-| F21 | Un besoin sans acheteur est acheté par les organisateurs. Les participants voient qui achète quoi.                                                                                                                    | P1       |
+| F21 | Un besoin sans acheteur est acheté par les organisateurs. Les participants voient qui achète quoi (`getNomComplet()` de l'acheteur).                                                                                                                    | P1       |
 | F22 | L'application calcule le coût de chaque besoin (`calculerCout()` = prix × quantité) et le budget total de l'événement (`calculerBudget()`).                                                                               | P1       |
 
 ### 4.5 Messages
 
 | ID  | Exigence                                                                          | Priorité |
 | --- | --------------------------------------------------------------------------------- | -------- |
-| F23 | Un participant envoie un message texte à un autre participant du même événement.  | P2       |
-| F24 | Chaque personne consulte les messages qu'elle a envoyés et reçus, triés par date. | P2       |
+| F23 | Un participant envoie un message texte à un autre participant du même événement (`envoyerMessage()`).  | P2       |
+| F24 | Chaque personne consulte les messages qu'elle a envoyés et reçus, triés par date (`afficher()`, `getContenu()`). | P2       |
 
 ### 4.6 Communication réseau
 
