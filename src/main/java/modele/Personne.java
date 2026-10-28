@@ -12,11 +12,12 @@ public class Personne {
     private String mdpHash;
     private LocalDate dateNaissance;
 
-    public Personne(int id, String nom, String prenom, String telephone, String email, String mdpHash, LocalDate dateNaissance) {
+    public Personne(int id, String nom, String prenom, String telephone, byte[] avatar, String email, String mdpHash, LocalDate dateNaissance) {
         this.id = id;
         this.nom = nom;
         this.prenom = prenom;
         this.telephone = telephone;
+        this.avatar = avatar;
         this.email = email;
         this.mdpHash = mdpHash;
         this.dateNaissance = dateNaissance;
@@ -96,6 +97,11 @@ public class Personne {
         else {
             return LocalDate.now().getYear() - dateNaissance.getYear();
         }
+    }
+
+    boolean verifierMotDePasse(String motDePasse) {
+        // Implémentation de la vérification du mot de passe B-Crypt
+        return false; // Remplacez par la logique réelle de vérification du mot de passe
     }
 
     @Override
