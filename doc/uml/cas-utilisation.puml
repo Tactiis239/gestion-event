@@ -44,11 +44,11 @@ rectangle "Application de gestion d'événements" {
 V --> UC1
 U --> UC2
 U --> UC3
+U --> UC4
 U --> UC14
 U --> UC16
 U --> UC17
 
-O --> UC4
 O --> UC5
 O --> UC6
 O --> UC7
@@ -68,12 +68,13 @@ UC9 ..> UCD : <<include>>
 UC10 ..> UCD : <<include>>
 UC12 ..> UCD : <<include>>
 UC13 ..> UCD : <<include>>
+UC8 ..> UCD : <<include>>
 UC14 ..> UCD : <<include>>
 UC15 ..> UCD : <<include>>
 UC16 ..> UCD : <<include>>
 
 note right of UCD
-  Organisateurs : seuls à modifier l'événement,
+  Organisateurs : seuls à modifier ou supprimer l'événement,
   inviter, ajouter un co-organisateur et gérer les besoins.
   Invité : n'agit que sur ses propres invitations ;
   ne prend un besoin que s'il a accepté.

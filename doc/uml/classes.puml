@@ -56,6 +56,13 @@ enum StatutInvitation {
   REFUSEE
 }
 
+enum EtatMateriel {
+  NEUF
+  BON
+  USE
+  HORS_SERVICE
+}
+
 abstract class Besoin {
   -id: int
   -nom: String
@@ -72,7 +79,7 @@ class Consommable {
 
 abstract class Materiel {
   -aRendre: boolean
-  -etat: String
+  -etat: EtatMateriel
 }
 
 class MaterielSon {
@@ -123,7 +130,7 @@ note right of Evenement
   est ajouté aux besoins.
 end note
 
-note "acheteur = null →\nacheté par l'organisateur" as N2
+note "acheteur = null →\nacheté par les organisateurs" as N2
 Besoin .. N2
 
 @enduml

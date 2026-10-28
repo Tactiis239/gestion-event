@@ -32,7 +32,7 @@ else organisateur valide
   create participant "i:Invitation" as I
   E -> I : new Invitation(p)
   note right of I : statut = EN_ATTENTE
-  S -> D : enregistrerInvitation(idEvt, i)
+  S -> D : enregistrerInvitation(idEvt, p)
   note right of D : INSERT INTO invitation\n(PreparedStatement)
   S --> GC : ok
   GC --> C : Reponse(succes=true)
