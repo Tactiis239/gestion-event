@@ -117,7 +117,7 @@ Priorités : **P1** = MVP, indispensable à la démonstration ; **P2** = prévu,
 
 | ID  | Exigence                                                                                                                                                                                                                  | Priorité |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| F17 | Un organisateur ajoute un besoin (nom, prix unitaire, quantité) : **consommable** ou **matériel**, décliné en **matériel son** (décibels, puissance) ou **matériel lumière** (lumens, couleur). | P1       |
+| F17 | Un organisateur ajoute ou supprime un besoin (nom, prix unitaire, quantité) : **consommable** ou **matériel**, décliné en **matériel son** (décibels, puissance) ou **matériel lumière** (lumens, couleur). | P1       |
 | F18 | Un organisateur attribue l'achat d'un besoin à un participant (`acheter()`).                                                                                                                                                            | P1       |
 | F19 | Un invité ayant **accepté** l'invitation peut prendre en charge lui-même un besoin sans acheteur.                                                                                                                         | P1       |
 | F20 | Un besoin n'est attribué qu'à un participant (organisateur ou invité ayant accepté). Si un invité refuse après coup, ses besoins n'ont plus d'acheteur.                                                               | P2       |
@@ -187,9 +187,9 @@ L'application est découpée en quatre paquets :
 
 | Paquet    | Rôle                                         | Classes principales                                                                                                                                       |
 | --------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `modele`  | Objets métier et leurs règles                | `Personne`, `Evenement`, `TypeEvenement`, `Invitation`, `StatutInvitation`, `Message`, `Besoin` (+ `Consommable`, `Materiel` → `MaterielSon`, `MaterielLumiere`) |
+| `modele`  | Objets métier et leurs règles                | `Personne`, `Evenement`, `TypeEvenement`, `Invitation`, `StatutInvitation`, `Message`, `Besoin` (+ `Consommable`, `Materiel` → `MaterielSon`, `MaterielLumiere`), `AccesRefuseException` |
 | `reseau`  | Protocole partagé entre client et serveur    | `Requete`, `Reponse`, `TypeRequete`                                                                                                                       |
-| `serveur` | Écoute réseau, contrôle d'accès, persistance | `Serveur`, `GestionnaireClient`, `ServiceEvenements`, `Depot` (interface), `DepotJDBC`, `ConnexionBD`, exceptions                                         |
+| `serveur` | Écoute réseau, contrôle d'accès, persistance | `Serveur`, `GestionnaireClient`, `ServiceEvenements`, `Depot` (interface), `DepotJDBC`, `ConnexionBD`, `AuthentificationException`                                         |
 | `client`  | Connexion au serveur et interface JavaFX     | `Client`, `ApplicationClient`, `ControleurConnexion`, `ControleurEvenements`, `ControleurEvenement` (+ vues `.fxml`)                                      |
 
 Notions POO mises en œuvre :
@@ -200,7 +200,7 @@ Notions POO mises en œuvre :
 - **Composition :** un `Evenement` possède ses `Invitation`, ses `Besoin` et ses `Message` (supprimés avec lui).
 - **Agrégation :** un `Evenement` référence ses organisateurs (`Personne`), qui existent indépendamment de lui.
 - **Énumérations :** `TypeEvenement`, `StatutInvitation`, `TypeRequete`.
-- **Exceptions personnalisées :** `AccesRefuseException`, `AuthentificationException`.
+- **Exceptions personnalisées :** `AccesRefuseException` (levée par le modèle, ex. `inviter()`), `AuthentificationException` (levée par le service à la connexion).
 - **Threads :** un `GestionnaireClient` (`Runnable`) par client connecté côté serveur ; une `Task` JavaFX par appel réseau côté client.
 
 ---
@@ -220,7 +220,7 @@ Clés primaires notées `PK`, clés étrangères notées `#`.
 | `organisateur` | `#id_evenement`, `#id_personne` — PK composée                                                                                                                  | Lien N–N `organisateurs` → table de jonction |
 | `invitation`   | `id` PK, `#id_evenement`, `#id_personne`, `statut`, `date_invitation` — UNIQUE (`id_evenement`, `id_personne`)                                               | Classe `Invitation` (lien 1–N `invitations`) |
 | `besoin`       | `id` PK, `#id_evenement`, `#id_acheteur` (NULL possible), `type`, `nom`, `prix`, `quantite`, `decibels`, `puissance_watts`, `lumens`, `couleur` | Hiérarchie `Besoin` (table unique)         |
-| `message`      | `id` PK, `#id_evenement`, `#id_envoyeur`, `#id_receveur`, `contenu` NOT NULL, `date_envoi` NOT NULL                                                           | Classe `Message`                           |
+| `message`      | `id` PK, `#id_evenement`, `#id_envoyeur`, `#id_receveur`, `contenu` NOT NULL, `date_envoi` NOT NULL (attribut `date`)                                                           | Classe `Message`                           |
 
 Les compositions de l'UML (`Invitation`, `Besoin`, `Message` dans `Evenement`) se traduisent par `ON DELETE CASCADE` sur `id_evenement` (F8). Les clés étrangères sont activées à chaque connexion (`PRAGMA foreign_keys = ON`, désactivé par défaut dans SQLite).
 
