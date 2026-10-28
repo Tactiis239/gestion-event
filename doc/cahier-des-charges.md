@@ -100,8 +100,8 @@ Priorités : **P1** = MVP, indispensable à la démonstration ; **P2** = prévu,
 | F6  | La personne voit la liste des événements qu'elle organise et de ceux auxquels elle est invitée.                                                                                             | P1       |
 | F7  | Un organisateur modifie les informations de l'événement.                                                                                                                                    | P2       |
 | F8  | Un organisateur supprime l'événement (invitations, besoins et messages associés sont supprimés).                                                                                            | P2       |
-| F9  | Pour un mariage, un budget traiteur (`Consommable`) est ajouté aux besoins de l'événement.                                                                                                  | P3       |
-| F10 | Un organisateur ajoute un co-organisateur parmi les personnes existantes.                                                                                                                   | P2       |
+| F9  | À la création d'un mariage, un budget traiteur (`Consommable`) est ajouté une fois à ses besoins ; l'organisateur peut le supprimer s'il n'en veut pas.                                | P3       |
+| F10 | Un organisateur ajoute un co-organisateur parmi les personnes existantes (sinon `AccesRefuseException`).                                                                                                                   | P2       |
 | F11 | Un organisateur ajoute un logo et une bannière à l'événement ; chaque personne peut avoir un avatar (fourni dans les données de test).                                                                                        | P3       |
 
 ### 4.3 Invitations
@@ -247,7 +247,7 @@ Toute la hiérarchie `Besoin` (`Consommable`, `MaterielSon`, `MaterielLumiere`) 
 
 ### 8.4 Données non stockées
 
-Rien de ce qui se calcule n'est enregistré : le coût d'un besoin (`prix × quantite`), le budget d'un événement, l'âge d'une personne, la liste des participants et le fait qu'un besoin soit acheté sont calculés à la demande (`calculerCout()`, `calculerBudget()`, `getAge()`, `getParticipants()`, `estAchete()`).
+Rien de ce qui se calcule n'est enregistré : le coût d'un besoin (`prix × quantite`), le budget d'un événement, l'âge d'une personne, la liste des participants et le fait qu'un besoin soit pris en charge par un participant (`acheteur` renseigné) sont calculés à la demande (`calculerCout()`, `calculerBudget()`, `getAge()`, `getParticipants()`, `estAchete()`).
 
 ### 8.5 Index
 
@@ -265,7 +265,7 @@ L'index créé par `UNIQUE (id_evenement, id_personne)` couvre déjà la liste d
 
 Comme dans le kit de la séance 2, le DAO fait le SQL et le service (`ServiceEvenements`) ouvre et valide la transaction.
 
-- **Création d'un événement (règle 4) :** l'`INSERT` dans `evenement` et l'`INSERT` du créateur dans `organisateur` sont validés ensemble, ou pas du tout (`commit` / `rollback`) : un événement n'existe jamais sans organisateur.
+- **Création d'un événement (règle 4) :** l'`INSERT` dans `evenement` et l'`INSERT` du créateur dans `organisateur` (plus le budget traiteur d'un mariage, F9) sont validés ensemble, ou pas du tout (`commit` / `rollback`) : un événement n'existe jamais sans organisateur.
 - **Refus après acceptation (F20) :** le passage à `REFUSEE` et la libération des besoins de l'invité (`id_acheteur = NULL`) sont validés ensemble, ou pas du tout (`commit` / `rollback`).
 
 ### 8.7 Accès JDBC

@@ -17,7 +17,7 @@ class Evenement {
   -dateEvenement: LocalDateTime
   -type: TypeEvenement
   +inviter(appelant: Personne, p: Personne): void
-  +ajouterOrganisateur(p: Personne): void
+  +ajouterOrganisateur(appelant: Personne, p: Personne): void
   +estOrganisateur(p: Personne): boolean
   +ajouterBesoin(b: Besoin): void
   +supprimerBesoin(b: Besoin): void
@@ -122,15 +122,15 @@ Materiel <|-- MaterielSon
 Materiel <|-- MaterielLumiere
 
 note right of Evenement
-  **inviter()** : ne fonctionne que
-  si l'appelant est dans
-  la liste des organisateurs.
-  Si type = MARIAGE, un
-  budget traiteur (Consommable)
-  est ajouté aux besoins.
+  **inviter()**, **ajouterOrganisateur()** :
+  ne fonctionnent que si l'appelant
+  est dans la liste des organisateurs.
+  **Création** : si type = MARIAGE,
+  un budget traiteur (Consommable)
+  est ajouté une fois aux besoins.
 end note
 
-note "acheteur = null →\nacheté par les organisateurs" as N2
+note "acheteur = null →\nacheté par les organisateurs\n**estAchete()** : acheteur ≠ null" as N2
 Besoin .. N2
 
 @enduml
