@@ -15,7 +15,7 @@ Un organisateur crée un événement, invite des personnes et liste ce qu'il fau
 
 **Pourquoi ce sujet :**
 
-- **Héritage et polymorphisme naturels :** plusieurs types de besoins (`Consommable`, `Materiel`, lui-même décliné en `MateriauSon` et `Lumiere`) partagent un comportement commun mais se décrivent différemment (`decrire()`, `getCategorie()`).
+- **Héritage et polymorphisme naturels :** plusieurs types de besoins (`Consommable`, `Materiel`, lui-même décliné en `MaterielSon` et `MaterielLumiere`) partagent des attributs et un comportement communs (`acheter()`, `calculerCout()`) et sont manipulés ensemble dans une `List<Besoin>`, quel que soit leur type.
 - **Encapsulation et règles métier :** une invitation change d'état (en attente → acceptée / refusée), un besoin n'est attribué qu'à un participant, seuls les organisateurs invitent ; ces règles sont protégées dans les classes.
 - **Réseau :** plusieurs personnes consultent et modifient les mêmes données, ce qui justifie une architecture client/serveur avec Sockets Java.
 - **Utile au quotidien :** le besoin est concret (« qui achète quoi, pour quel budget ? ») et facile à démontrer.
@@ -30,7 +30,7 @@ Organiser un événement entre amis ou en famille passe souvent par des groupes 
 
 ### 2.2 Objectifs
 
-1. Centraliser les informations d'un événement (nom, date, lieu, description, capacité, prix, visuels) en un seul endroit.
+1. Centraliser les informations d'un événement (nom, date, lieu, description, prix, visuels) en un seul endroit.
 2. Savoir à tout moment qui est invité, qui a accepté et qui a refusé.
 3. Répartir les achats entre participants pour éviter oublis et doublons, et connaître le budget total.
 4. Permettre aux participants d'échanger des messages au sein de l'événement.
@@ -95,11 +95,11 @@ Priorités : **P1** = MVP, indispensable à la démonstration ; **P2** = prévu,
 
 | ID  | Exigence                                                                                                                                                                                    | Priorité |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| F5  | Une personne connectée crée un événement d'un type donné (anniversaire, mariage, soirée, autre) avec nom, description, date, lieu, capacité maximale et prix de participation. Elle en devient organisatrice. | P1       |
+| F5  | Une personne connectée crée un événement d'un type donné (anniversaire, mariage, soirée, autre) avec nom, description, date, lieu et prix de participation. Elle en devient organisatrice. | P1       |
 | F6  | La personne voit la liste des événements qu'elle organise et de ceux auxquels elle est invitée.                                                                                             | P1       |
 | F7  | Un organisateur modifie les informations de l'événement.                                                                                                                                    | P2       |
 | F8  | Un organisateur supprime l'événement (invitations, besoins et messages associés sont supprimés).                                                                                            | P2       |
-| F9  | À la création, l'application propose des besoins selon le type (`besoinsSuggeres()`) : pour un mariage, un budget traiteur (`Consommable`).                                                | P3       |
+| F9  | Pour un mariage, un budget traiteur (`Consommable`) est ajouté aux besoins de l'événement.                                                                                                  | P3       |
 | F10 | Un organisateur ajoute un co-organisateur parmi les personnes existantes.                                                                                                                   | P2       |
 | F11 | Un organisateur ajoute un logo et une bannière à l'événement ; chaque personne peut avoir un avatar.                                                                                        | P3       |
 
@@ -111,53 +111,50 @@ Priorités : **P1** = MVP, indispensable à la démonstration ; **P2** = prévu,
 | F13 | Seul un organisateur de l'événement peut y inviter quelqu'un (sinon `AccesRefuseException`).                                 | P1       |
 | F14 | Une même personne ne peut pas être invitée deux fois au même événement.                                                      | P1       |
 | F15 | L'invité consulte ses invitations et les accepte ou les refuse. Il peut changer d'avis tant que l'événement n'est pas passé. | P1       |
-| F16 | Une invitation ne peut plus être acceptée si l'événement a atteint sa capacité maximale (`estComplet()`).                    | P2       |
-| F17 | Les organisateurs voient l'état de chaque invitation (en attente, acceptée, refusée).                                        | P1       |
+| F16 | Les organisateurs voient l'état de chaque invitation (en attente, acceptée, refusée).                                        | P1       |
 
 ### 4.4 Besoins et budget (héritage / polymorphisme)
 
 | ID  | Exigence                                                                                                                                                                                                                  | Priorité |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| F18 | Un organisateur ajoute un besoin (nom, prix unitaire, quantité) : **consommable** (unité, périssable ou non) ou **matériel** (à rendre ou non, état), décliné en **matériel son** (puissance) ou **lumière** (couleur). | P1       |
-| F19 | Chaque besoin s'affiche via sa propre méthode `decrire()` (ex. « 6 bouteilles de jus — consommable » / « 1 enceinte 200 W — matériel à rendre »).                                                                       | P1       |
-| F20 | Un organisateur attribue l'achat d'un besoin à un participant.                                                                                                                                                            | P1       |
-| F21 | Un invité ayant **accepté** l'invitation peut prendre en charge lui-même un besoin sans acheteur.                                                                                                                         | P1       |
-| F22 | Un besoin n'est attribué qu'à un participant (organisateur ou invité ayant accepté). Si un invité refuse après coup, ses besoins sont libérés (`liberer()`).                                                               | P2       |
-| F23 | Un besoin sans acheteur reste à la charge des organisateurs. Les participants voient qui achète quoi.                                                                                                                    | P1       |
-| F24 | L'application calcule le coût de chaque besoin (`calculerCout()` = prix × quantité) et le budget total de l'événement (`calculerBudget()`).                                                                               | P1       |
+| F17 | Un organisateur ajoute un besoin (nom, prix unitaire, quantité) : **consommable** ou **matériel**, décliné en **matériel son** (décibels, puissance) ou **matériel lumière** (lumens, couleur). | P1       |
+| F18 | Un organisateur attribue l'achat d'un besoin à un participant (`acheter()`).                                                                                                                                                            | P1       |
+| F19 | Un invité ayant **accepté** l'invitation peut prendre en charge lui-même un besoin sans acheteur.                                                                                                                         | P1       |
+| F20 | Un besoin n'est attribué qu'à un participant (organisateur ou invité ayant accepté). Si un invité refuse après coup, ses besoins n'ont plus d'acheteur.                                                               | P2       |
+| F21 | Un besoin sans acheteur est acheté par l'organisateur. Les participants voient qui achète quoi.                                                                                                                    | P1       |
+| F22 | L'application calcule le coût de chaque besoin (`calculerCout()` = prix × quantité) et le budget total de l'événement (`calculerBudget()`).                                                                               | P1       |
 
 ### 4.5 Messages
 
 | ID  | Exigence                                                                          | Priorité |
 | --- | --------------------------------------------------------------------------------- | -------- |
-| F25 | Un participant envoie un message texte à un autre participant du même événement.  | P2       |
-| F26 | Chaque personne consulte les messages qu'elle a envoyés et reçus, triés par date. | P2       |
+| F23 | Un participant envoie un message texte à un autre participant du même événement.  | P2       |
+| F24 | Chaque personne consulte les messages qu'elle a envoyés et reçus, triés par date. | P2       |
 
 ### 4.6 Communication réseau
 
 | ID  | Exigence                                                                                                                           | Priorité |
 | --- | ---------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| F27 | Le serveur écoute sur un port configurable et accepte plusieurs clients simultanés (un thread `GestionnaireClient` par connexion). | P1       |
-| F28 | Chaque action du client est une `Requete` (type + paramètres) ; le serveur renvoie une `Reponse` (succès, message, données).       | P1       |
-| F29 | Les accès concurrents aux données partagées sont protégés (`synchronized` sur le service).                                         | P1       |
-| F30 | Les données à jour sont obtenues par rafraîchissement manuel (bouton « Actualiser » de l'interface).                               | P1       |
+| F25 | Le serveur écoute sur un port configurable et accepte plusieurs clients simultanés (un thread `GestionnaireClient` par connexion). | P1       |
+| F26 | Chaque action du client est une `Requete` (type + paramètres) ; le serveur renvoie une `Reponse` (succès, message, données).       | P1       |
+| F27 | Les accès concurrents aux données partagées sont protégés (`synchronized` sur le service).                                         | P1       |
+| F28 | Les données à jour sont obtenues par rafraîchissement manuel (bouton « Actualiser » de l'interface).                               | P1       |
 
 ### 4.7 Persistance
 
 | ID  | Exigence                                                                                                                                         | Priorité |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| F31 | Les données sont enregistrées dans une base SQLite via JDBC (tables `personne`, `evenement`, `organisateur`, `invitation`, `besoin`, `message`). | P1       |
-| F32 | Chaque modification est écrite immédiatement dans la base ; au redémarrage du serveur, toutes les données sont retrouvées.                       | P1       |
-| F33 | Les mots de passe sont stockés sous forme de hachés bcrypt (`mdpHash`) ; la connexion les vérifie avec `BCrypt.checkpw` (`verifierMotDePasse()`). | P1       |
+| F29 | Les données sont enregistrées dans une base SQLite via JDBC (tables `personne`, `evenement`, `organisateur`, `invitation`, `besoin`, `message`). | P1       |
+| F30 | Chaque modification est écrite immédiatement dans la base ; au redémarrage du serveur, toutes les données sont retrouvées.                       | P1       |
+| F31 | Les mots de passe sont stockés sous forme de hachés bcrypt (`mdpHash`) ; la connexion les vérifie avec `BCrypt.checkpw` (`seConnecter()`). | P1       |
 
 ### 4.8 Règles métier récapitulatives
 
 1. Seuls les organisateurs modifient, suppriment, invitent, ajoutent un co-organisateur et gèrent les besoins de l'événement.
 2. Un invité n'agit que sur **ses** invitations.
 3. Seuls les participants (organisateurs + invités ayant accepté) peuvent se voir attribuer un besoin ou échanger des messages dans l'événement.
-4. Le nombre d'invités ayant accepté ne dépasse jamais `capaciteMax`.
-5. Un événement a toujours au moins un organisateur.
-6. Toute violation d'une règle lève une exception métier, transformée par le serveur en `Reponse` d'échec avec un message clair.
+4. Un événement a toujours au moins un organisateur.
+5. Toute violation d'une règle lève une exception métier, transformée par le serveur en `Reponse` d'échec avec un message clair.
 
 ---
 
@@ -190,15 +187,15 @@ L'application est découpée en quatre paquets :
 
 | Paquet    | Rôle                                         | Classes principales                                                                                                                                       |
 | --------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `modele`  | Objets métier et leurs règles                | `Personne`, `Evenement`, `TypeEvenement`, `Invitation`, `StatutInvitation`, `Message`, `Besoin` (+ `Consommable`, `Materiel` → `MateriauSon`, `Lumiere`) |
+| `modele`  | Objets métier et leurs règles                | `Personne`, `Evenement`, `TypeEvenement`, `Invitation`, `StatutInvitation`, `Message`, `Besoin` (+ `Consommable`, `Materiel` → `MaterielSon`, `MaterielLumiere`) |
 | `reseau`  | Protocole partagé entre client et serveur    | `Requete`, `Reponse`, `TypeRequete`                                                                                                                       |
 | `serveur` | Écoute réseau, contrôle d'accès, persistance | `Serveur`, `GestionnaireClient`, `ServiceEvenements`, `Depot` (interface), `DepotJDBC`, `ConnexionBD`, exceptions                                         |
 | `client`  | Connexion au serveur et interface JavaFX     | `Client`, `ApplicationClient`, `ControleurConnexion`, `ControleurEvenements`, `ControleurEvenement` (+ vues `.fxml`)                                      |
 
 Notions POO mises en œuvre :
 
-- **Héritage :** `Besoin` → `Consommable`, `Materiel` ; `Materiel` → `MateriauSon`, `Lumiere`.
-- **Classes abstraites et polymorphisme :** `Besoin` et `Materiel` sont abstraites ; `decrire()` et `getCategorie()` sont redéfinies dans les sous-classes.
+- **Héritage :** `Besoin` → `Consommable`, `Materiel` ; `Materiel` → `MaterielSon`, `MaterielLumiere`.
+- **Classes abstraites et polymorphisme :** `Besoin` et `Materiel` sont abstraites ; un `Evenement` manipule tous ses besoins via une `List<Besoin>` (`calculerCout()`, `acheter()`), quel que soit leur type.
 - **Interface :** `Depot`, implémentée par `DepotJDBC` (le service ne dépend que de l'interface : on pourrait changer de base sans le modifier).
 - **Composition :** un `Evenement` possède ses `Invitation`, ses `Besoin` et ses `Message` (supprimés avec lui).
 - **Agrégation :** un `Evenement` référence ses organisateurs (`Personne`), qui existent indépendamment de lui.
@@ -219,20 +216,20 @@ Clés primaires notées `PK`, clés étrangères notées `#`.
 | Table          | Colonnes                                                                                                                                                       | Origine dans l'UML                         |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | `personne`     | `id` PK, `nom`, `prenom`, `telephone`, `avatar` (BLOB), `email` UNIQUE NOT NULL, `mdp_hash` NOT NULL, `date_naissance`                                       | Classe `Personne`                          |
-| `evenement`    | `id` PK, `nom` NOT NULL, `lieu`, `prix`, `logo` (BLOB), `banniere` (BLOB), `description`, `date_evenement` NOT NULL, `capacite_max`, `type`                  | Classe `Evenement` + enum `TypeEvenement`  |
+| `evenement`    | `id` PK, `nom` NOT NULL, `lieu`, `prix`, `logo` (BLOB), `banniere` (BLOB), `description`, `date_evenement` NOT NULL, `type`                  | Classe `Evenement` + enum `TypeEvenement`  |
 | `organisateur` | `#id_evenement`, `#id_personne` — PK composée                                                                                                                  | Lien N–N `organisateurs` → table de jonction |
 | `invitation`   | `id` PK, `#id_evenement`, `#id_personne`, `statut`, `date_invitation` — UNIQUE (`id_evenement`, `id_personne`)                                               | Classe `Invitation` (lien 1–N `invitations`) |
-| `besoin`       | `id` PK, `#id_evenement`, `#id_acheteur` (NULL possible), `type`, `nom`, `prix`, `quantite`, `unite`, `perissable`, `a_rendre`, `etat`, `puissance_watts`, `couleur` | Hiérarchie `Besoin` (table unique)         |
+| `besoin`       | `id` PK, `#id_evenement`, `#id_acheteur` (NULL possible), `type`, `nom`, `prix`, `quantite`, `decibels`, `puissance_watts`, `lumens`, `couleur` | Hiérarchie `Besoin` (table unique)         |
 | `message`      | `id` PK, `#id_evenement`, `#id_envoyeur`, `#id_receveur`, `contenu` NOT NULL, `date_envoi` NOT NULL                                                           | Classe `Message`                           |
 
 Les compositions de l'UML (`Invitation`, `Besoin`, `Message` dans `Evenement`) se traduisent par `ON DELETE CASCADE` sur `id_evenement` (F8). Les clés étrangères sont activées à chaque connexion (`PRAGMA foreign_keys = ON`, désactivé par défaut dans SQLite).
 
 ### 8.2 Héritage : table unique
 
-Toute la hiérarchie `Besoin` (`Consommable`, `MateriauSon`, `Lumiere`) est stockée dans la table `besoin`, avec une colonne `type` (`CONSOMMABLE`, `MATERIAU_SON`, `LUMIERE`).
+Toute la hiérarchie `Besoin` (`Consommable`, `MaterielSon`, `MaterielLumiere`) est stockée dans la table `besoin`, avec une colonne `type` (`CONSOMMABLE`, `MATERIEL_SON`, `MATERIEL_LUMIERE`).
 
-- **Pourquoi :** l'écran principal (F21, F23) liste tous les besoins d'un événement, quel que soit leur type : une seule requête, sans jointure.
-- **Contrepartie :** quelques colonnes `NULL` (`unite` n'a de sens que pour un consommable). Des contraintes `CHECK` par type empêchent les combinaisons incohérentes.
+- **Pourquoi :** l'écran principal (F19, F21) liste tous les besoins d'un événement, quel que soit leur type : une seule requête, sans jointure.
+- **Contrepartie :** quelques colonnes `NULL` (`lumens` n'a de sens que pour du matériel lumière). Des contraintes `CHECK` par type empêchent les combinaisons incohérentes.
 - **Côté Java :** le DAO utilise une Factory qui instancie la bonne sous-classe selon la colonne `type`.
 
 ### 8.3 Contraintes
@@ -243,11 +240,11 @@ Toute la hiérarchie `Besoin` (`Consommable`, `MateriauSon`, `Lumiere`) est stoc
 | `UNIQUE (id_evenement, id_personne)` sur `invitation`                          | Pas de double invitation (F14) |
 | `CHECK (statut IN ('EN_ATTENTE', 'ACCEPTEE', 'REFUSEE'))`                      | Enum `StatutInvitation`      |
 | `CHECK (type IN ('ANNIVERSAIRE', 'MARIAGE', 'SOIREE', 'AUTRE'))`               | Enum `TypeEvenement`         |
-| `CHECK (capacite_max > 0)`, `CHECK (prix >= 0)`, `CHECK (quantite > 0)`        | Valeurs métier valides       |
+| `CHECK (prix >= 0)`, `CHECK (quantite > 0)`        | Valeurs métier valides       |
 
 ### 8.4 Données non stockées
 
-Rien de ce qui se calcule n'est enregistré : le coût d'un besoin (`prix × quantite`), le budget d'un événement, l'âge d'une personne, le nombre de participants et le fait qu'un événement soit complet sont calculés à la demande (`calculerCout()`, `calculerBudget()`, `getAge()`, `getParticipants()`, `estComplet()`).
+Rien de ce qui se calcule n'est enregistré : le coût d'un besoin (`prix × quantite`), le budget d'un événement, l'âge d'une personne, la liste des participants et le fait qu'un besoin soit acheté sont calculés à la demande (`calculerCout()`, `calculerBudget()`, `getAge()`, `getParticipants()`, `estAchete()`).
 
 ### 8.5 Index
 
@@ -256,15 +253,15 @@ Au moins deux index, chacun justifié par un `EXPLAIN QUERY PLAN` avant / après
 | Index                                               | Requête accélérée                                   |
 | --------------------------------------------------- | --------------------------------------------------- |
 | `idx_invitation_personne ON invitation (id_personne)` | « Mes invitations » (F15)                           |
-| `idx_besoin_evenement ON besoin (id_evenement)`     | Liste des besoins d'un événement (F21, F23, F24)    |
-| `idx_message_receveur ON message (id_receveur, date_envoi)` | Messages reçus, triés par date (F26)        |
+| `idx_besoin_evenement ON besoin (id_evenement)`     | Liste des besoins d'un événement (F19, F21, F22)    |
+| `idx_message_receveur ON message (id_receveur, date_envoi)` | Messages reçus, triés par date (F24)        |
 
-L'index créé par `UNIQUE (id_evenement, id_personne)` couvre déjà la liste des invitations d'un événement (F17).
+L'index créé par `UNIQUE (id_evenement, id_personne)` couvre déjà la liste des invitations d'un événement (F16).
 
 ### 8.6 Transactions
 
-- **Acceptation d'une invitation (F16, règle 4) :** dans une transaction, l'`UPDATE` du statut n'est appliqué que si le nombre d'invités ayant accepté reste inférieur à `capacite_max`. Si l'`UPDATE` modifie 0 ligne, quelqu'un a pris la dernière place : l'acceptation est refusée.
-- **Refus après acceptation (F22) :** le passage à `REFUSEE` et la libération des besoins de l'invité (`id_acheteur = NULL`) sont validés ensemble, ou pas du tout (`commit` / `rollback`).
+- **Création d'un événement (règle 4) :** l'`INSERT` dans `evenement` et l'`INSERT` du créateur dans `organisateur` sont validés ensemble, ou pas du tout (`commit` / `rollback`) : un événement n'existe jamais sans organisateur.
+- **Refus après acceptation (F20) :** le passage à `REFUSEE` et la libération des besoins de l'invité (`id_acheteur = NULL`) sont validés ensemble, ou pas du tout (`commit` / `rollback`).
 
 ### 8.7 Accès JDBC
 
@@ -288,7 +285,7 @@ Les actions sensibles incluent toutes le cas « Vérifier les droits d'accès »
 
 ![Diagramme de classes](uml/classes.png)
 
-Un `Evenement` est composé de ses invitations, de ses besoins et de ses messages, et agrège ses organisateurs. `Besoin` est abstraite et se spécialise en `Consommable` et `Materiel` (`MateriauSon`, `Lumiere`).
+Un `Evenement` est composé de ses invitations, de ses besoins et de ses messages, et agrège ses organisateurs. `Besoin` est abstraite et se spécialise en `Consommable` et `Materiel` (`MaterielSon`, `MaterielLumiere`).
 
 ### 9.3 Diagramme de séquence — Inviter une personne
 
@@ -315,9 +312,9 @@ Ce diagramme montre le trajet complet d'une requête : de l'interface JavaFX jus
 
 Le projet est considéré comme réussi si le scénario suivant fonctionne avec un serveur et deux clients :
 
-1. Alice se connecte et crée une soirée de 10 places.
+1. Alice se connecte et crée une soirée.
 2. Alice invite Bob ; Bob voit l'invitation et l'accepte.
-3. Alice ajoute deux besoins : « 6 bouteilles de jus » (consommable, 2 € l'unité) et « 1 enceinte » (matériel son à rendre, 30 €).
+3. Alice ajoute deux besoins : « 6 bouteilles de jus » (consommable, 2 € l'unité) et « 1 enceinte » (matériel son, 30 €).
 4. Bob prend en charge l'enceinte ; Alice voit, après actualisation, que Bob l'achète et que le budget total est de 42 €.
 5. Bob tente de modifier la soirée d'Alice : le serveur refuse avec « Accès refusé ».
 6. Le serveur est redémarré : la soirée, l'invitation et les besoins sont toujours là (lus depuis la base SQLite).

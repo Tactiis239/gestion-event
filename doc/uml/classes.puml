@@ -15,18 +15,14 @@ class Evenement {
   -banniere: byte[]
   -description: String
   -dateEvenement: LocalDateTime
-  -capaciteMax: int
   -type: TypeEvenement
-  +inviter(appelant: Personne, p: Personne): Invitation
-  +ajouterOrganisateur(appelant: Personne, p: Personne): void
+  +inviter(appelant: Personne, p: Personne): void
+  +ajouterOrganisateur(p: Personne): void
   +estOrganisateur(p: Personne): boolean
-  +estParticipant(p: Personne): boolean
   +ajouterBesoin(b: Besoin): void
   +supprimerBesoin(b: Besoin): void
   +envoyerMessage(m: Message): void
   +getParticipants(): List<Personne>
-  +estComplet(): boolean
-  +besoinsSuggeres(): List<Besoin>
   +calculerBudget(): double
 }
 
@@ -65,35 +61,24 @@ abstract class Besoin {
   -nom: String
   -prix: double
   -quantite: int
-  +attribuerA(p: Personne): void
-  +liberer(): void
-  +aUnAcheteur(): boolean
+  +acheter(p: Personne): void
+  +estAchete(): boolean
   +calculerCout(): double
-  +{abstract} getCategorie(): String
-  +{abstract} decrire(): String
 }
 
 class Consommable {
-  -unite: String
-  -perissable: boolean
-  +getCategorie(): String
-  +decrire(): String
 }
 
-abstract class Materiel {
-  -aRendre: boolean
-  -etat: String
-  +getCategorie(): String
-}
+abstract class Materiel
 
-class MateriauSon {
+class MaterielSon {
+  -decibels: int
   -puissanceWatts: int
-  +decrire(): String
 }
 
-class Lumiere {
+class MaterielLumiere {
+  -lumens: int
   -couleur: String
-  +decrire(): String
 }
 
 class Personne {
@@ -105,7 +90,7 @@ class Personne {
   -email: String
   -mdpHash: String
   -dateNaissance: LocalDate
-  +verifierMotDePasse(mdp: String): boolean
+  +seConnecter(email: String, mdp: String): boolean
   +getNomComplet(): String
   +getAge(): int
 }
@@ -122,19 +107,19 @@ Besoin "*" --> "0..1" Personne : acheteur
 
 Besoin <|-- Consommable
 Besoin <|-- Materiel
-Materiel <|-- MateriauSon
-Materiel <|-- Lumiere
+Materiel <|-- MaterielSon
+Materiel <|-- MaterielLumiere
 
 note right of Evenement
   **inviter()** : ne fonctionne que
-  si l'appelant est un organisateur
-  et si la personne n'est pas déjà invitée.
-  **besoinsSuggeres()** : si type = MARIAGE,
-  un budget traiteur (Consommable)
-  est proposé à la création.
+  si l'appelant est dans
+  la liste des organisateurs.
+  Si type = MARIAGE, un
+  budget traiteur (Consommable)
+  est ajouté aux besoins.
 end note
 
-note "acheteur = null →\nà la charge des organisateurs" as N2
+note "acheteur = null →\nacheté par l'organisateur" as N2
 Besoin .. N2
 
 @enduml

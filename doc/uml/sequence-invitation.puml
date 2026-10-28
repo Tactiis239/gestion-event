@@ -20,20 +20,22 @@ C -> GC : envoie la requête (ligne de texte) via Socket
 GC -> S : inviter(personneConnectee, idEvt, email)
 S -> D : trouverEvenement(idEvt)
 D --> S : e
-S -> E : estOrganisateur(personneConnectee)
-E --> S : vrai / faux
-alt la personne n'est pas organisatrice
+S -> D : trouverPersonne(email)
+D --> S : p
+S -> E : inviter(personneConnectee, p)
+E -> E : estOrganisateur(personneConnectee)
+alt la personne connectée n'est pas organisatrice
+  E --> S : AccesRefuseException
   S --> GC : AccesRefuseException
   GC --> C : Reponse(succes=false, "Accès refusé")
 else organisateur valide
-  S -> D : trouverPersonne(email)
-  D --> S : invite
-  S -> E : inviter(personneConnectee, invite)
-  E --> S : invitation (EN_ATTENTE)
-  S -> D : enregistrerInvitation(idEvt, invitation)
+  create participant "i:Invitation" as I
+  E -> I : new Invitation(p)
+  note right of I : statut = EN_ATTENTE
+  S -> D : enregistrerInvitation(idEvt, i)
   note right of D : INSERT INTO invitation\n(PreparedStatement)
-  S --> GC : invitation
-  GC --> C : Reponse(succes=true, invitation)
+  S --> GC : ok
+  GC --> C : Reponse(succes=true)
 end
 C --> IHM : reponse
 IHM --> Organisateur : affiche le résultat (Platform.runLater)

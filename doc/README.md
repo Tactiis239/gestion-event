@@ -12,7 +12,7 @@
 |---|---|
 | Cas d'utilisation | `uml/cas-utilisation.puml` |
 | Classes | `uml/classes.puml` |
-| Séquence : inviter un utilisateur | `uml/sequence-invitation.puml` |
+| Séquence : inviter une personne | `uml/sequence-invitation.puml` |
 
 ## Régénérer les images
 
