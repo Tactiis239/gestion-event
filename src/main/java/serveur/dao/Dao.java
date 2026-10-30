@@ -1,16 +1,18 @@
 package serveur.dao;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 
-/** Contrat commun à tous les DAO : un DAO par table, tout le SQL reste ici. */
+/**
+ * Contrat commun des DAO principaux : tout le SQL reste dans les DAO.
+ */
 public interface Dao<T> {
     Optional<T> trouver(int id);
 
     List<T> trouverTous();
 
-    /** Insère l'objet et retourne l'identifiant généré par la base. */
-    int creer(T objet);
+    int creer(Connection c, T objet);
 
-    void supprimer(int id);
+    void supprimer(Connection c, int id);
 }
