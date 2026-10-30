@@ -1,32 +1,32 @@
 package serveur.service;
 
-import serveur.dao.UtilisateurDao;
-import modele.Role;
-import modele.Utilisateur;
-import serveur.securite.Hacheur;
+import modele.Personne;
+import org.mindrot.jbcrypt.BCrypt;
+import serveur.dao.PersonneDao;
 
-import java.util.Optional;
+import java.time.LocalDate;
 
 public class AuthService {
-    private final UtilisateurDao utilisateurs;
+    private final PersonneDao personnes;
 
-    public AuthService(UtilisateurDao utilisateurs) {
-        this.utilisateurs = utilisateurs;
-    }
-
-    /** Crée un compte : le sel est généré ici, le mot de passe en clair n'est jamais conservé. */
-    public int inscrire(String email, String nom, String motDePasse, Role role) {
-        String sel = Hacheur.genererSel();
-        String hash = Hacheur.hacher(motDePasse, sel);
-        return utilisateurs.creer(new Utilisateur(0, email, nom, hash, sel, role));
+    public AuthService(PersonneDao personnes) {
+        this.personnes = personnes;
     }
 
     /**
-     * Retourne l'utilisateur si les identifiants sont bons, sinon Optional.empty().
-     * Même résultat pour « email inconnu » et « mauvais mot de passe » : on ne renseigne pas l'attaquant.
+     * Renvoie la personne si les identifiants sont bons.
      */
-    public Optional<Utilisateur> seConnecter(String email, String motDePasse) {
-        return utilisateurs.trouverParEmail(email)
-                .filter(u -> Hacheur.verifier(motDePasse, u.getSel(), u.getMdpHash()));
+    public Personne seConnecter(String email, String mdp) {
+        return personnes.trouverParEmail(email)
+                .filter(p -> p.seConnecter(email, mdp))
+                .orElseThrow(AuthentificationException::new);
+    }
+
+    /** Création d'un compte. Le mot de passe est haché avec bcrypt. */
+    public Personne creerCompte(String nom, String prenom, String email, String mdp, LocalDate dateNaissance) {
+        String hash = BCrypt.hashpw(mdp, BCrypt.gensalt());
+        Personne p = new Personne(0, nom, prenom, null, null, email, hash, dateNaissance);
+        Transaction.executer(c -> personnes.creer(c, p));
+        return p;
     }
 }

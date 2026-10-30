@@ -130,6 +130,7 @@ public class Evenement {
         List<Besoin> liberes = new ArrayList<>();
         for (Besoin b : besoins) {
             if (invite.equals(b.getAcheteur())) {
+                b.liberer();
                 liberes.add(b);
             }
         }

@@ -34,6 +34,10 @@ public abstract class Besoin {
         this.acheteur = p;
     }
 
+    public void liberer() {
+        this.acheteur = null;
+    }
+
     public boolean estAchete() {
         return acheteur != null;
     }

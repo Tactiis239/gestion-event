@@ -1,76 +1,185 @@
 package serveur;
 
+import modele.AccesRefuseException;
+import modele.Besoin;
+import modele.Consommable;
+import modele.EtatMateriel;
+import modele.Evenement;
+import modele.MaterielSon;
+import modele.Message;
+import modele.Personne;
+import modele.StatutInvitation;
+import modele.TypeEvenement;
+import serveur.bdd.ConnexionBD;
 import serveur.bdd.InitBase;
-import serveur.dao.EmpruntDao;
-import serveur.dao.MediaDao;
-import serveur.dao.UtilisateurDao;
-import modele.Emprunt;
-import modele.Media;
-import modele.Role;
-import modele.Utilisateur;
+import serveur.dao.PersonneDao;
 import serveur.service.AuthService;
-import serveur.service.EmpruntService;
-import serveur.service.MediaIndisponibleException;
+import serveur.service.AuthentificationException;
+import serveur.service.ServiceEvenements;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.time.LocalDateTime;
 
-/** Livrable de S2 : ce programme prouve que la base, les DAO et la transaction fonctionnent. */
+/**
+ * Livrable BDD : prouve que la base, les DAO, les règles métier et les transactions fonctionnent,
+ * en rejouant le scénario de validation (section 11 du cahier des charges).
+ * Chaque vérification lève une erreur si le résultat n'est pas celui attendu.
+ */
 public class MainTestBDD {
 
+    private static int verifications = 0;
+
     public static void main(String[] args) throws Exception {
-        // Repartir d'une base vide à chaque lancement (SQLite : un simple fichier)
+        // Repartir d'une base vide (le nom doit correspondre à db.url dans db.properties)
         Files.deleteIfExists(Path.of("evenements.db"));
         InitBase.executerScript("/schema.sql");
         InitBase.executerScript("/donnees_test.sql");
         System.out.println("1. Base créée et remplie");
 
-        UtilisateurDao utilisateurs = new UtilisateurDao();
-        MediaDao medias = new MediaDao();
-        EmpruntDao emprunts = new EmpruntDao();
-        AuthService auth = new AuthService(utilisateurs);
-        EmpruntService service = new EmpruntService(medias, emprunts);
+        PersonneDao personnes = new PersonneDao();
+        AuthService auth = new AuthService(personnes);
+        ServiceEvenements service = ServiceEvenements.creerParDefaut();
 
-        System.out.println("\n2. Catalogue (polymorphisme : chaque sous-classe se décrit elle-même)");
-        for (Media m : medias.trouverTous()) {
-            System.out.println("   " + m);
+        // ------------------------------------------------------------ authentification
+        System.out.println("\n2. Authentification (bcrypt)");
+        Personne alice = auth.seConnecter("alice@example.org", "motdepasse");
+        Personne bob = auth.seConnecter("BOB@example.org", "motdepasse");
+        Personne chloe = auth.seConnecter("chloe@example.org", "motdepasse");
+        System.out.println("   Connectés : " + alice.getNomComplet() + ", " + bob.getNomComplet()
+                + ", " + chloe.getNomComplet() + " (" + alice.getAge() + " ans pour Alice)");
+        String msgMauvaisMdp = echec(() -> auth.seConnecter("alice@example.org", "mauvais"),
+                AuthentificationException.class);
+        String msgEmailInconnu = echec(() -> auth.seConnecter("inconnu@example.org", "motdepasse"),
+                AuthentificationException.class);
+        verifier(msgMauvaisMdp.equals(msgEmailInconnu), "même message pour mauvais mdp et e-mail inconnu (F2)");
+
+        // ------------------------------------------------------------ données de test
+        System.out.println("\n3. Données de test relues (Factory sur la colonne type)");
+        Evenement anniv = service.trouverEvenement(1);
+        System.out.println("   " + anniv);
+        for (Besoin b : anniv.getBesoins()) {
+            System.out.println("     - " + b);
         }
+        verifier(anniv.getBesoins().size() == 3, "3 besoins de types différents relus");
+        verifier(service.evenementsOuInvite(alice).size() == 1, "Alice voit l'anniversaire où elle est invitée");
 
-        System.out.println("\n3. Comptes et authentification");
-        int idAlice = auth.inscrire("alice@example.org", "Alice", "motdepasse123", Role.ADHERENT);
-        int idBob = auth.inscrire("bob@example.org", "Bob", "autreMotDePasse", Role.ADHERENT);
-        Optional<Utilisateur> ok = auth.seConnecter("alice@example.org", "motdepasse123");
-        Optional<Utilisateur> ko = auth.seConnecter("alice@example.org", "mauvais");
-        System.out.println("   Bon mot de passe     -> " + ok.map(Utilisateur::toString).orElse("REFUSÉ"));
-        System.out.println("   Mauvais mot de passe -> " + ko.map(Utilisateur::toString).orElse("REFUSÉ"));
+        // ------------------------------------------------------------ scénario
+        System.out.println("\n4. Scénario de validation");
+        Evenement soiree = service.creerEvenement(alice, "Soirée de fin de semestre", "Chez Alice", 0,
+                "Apportez vos jeux !", LocalDateTime.now().plusMonths(2).withSecond(0).withNano(0),
+                TypeEvenement.SOIREE);
+        int idSoiree = soiree.getId();
+        System.out.println("   Alice crée : " + soiree);
+        verifier(service.evenementsOrganises(alice).size() == 1, "Alice est organisatrice de la soirée (règle 4)");
 
-        System.out.println("\n4. Transaction : emprunt du seul exemplaire de « Celeste »");
-        int idCeleste = medias.rechercherParTitre("Celeste").get(0).getId();
-        Emprunt e1 = service.emprunter(idAlice, idCeleste, 14);
-        System.out.println("   Alice : " + e1);
+        service.inviter(alice, idSoiree, "bob@example.org");
+        echec(() -> service.inviter(alice, idSoiree, "bob@example.org"), IllegalStateException.class);
+        verifier(true, "double invitation refusée (F14)");
+
+        service.repondreInvitation(bob, idSoiree, true);
+        System.out.println("   Bob accepte l'invitation");
+
+        Besoin jus = service.ajouterBesoin(alice, idSoiree, new Consommable(0, "Bouteille de jus", 2, 6, false));
+        Besoin enceinte = service.ajouterBesoin(alice, idSoiree,
+                new MaterielSon(0, "Enceinte", 30, 1, true, EtatMateriel.BON, 95, 60));
+        echec(() -> service.ajouterBesoin(bob, idSoiree, new Consommable(0, "Chips", 1.5, 3, false)),
+                AccesRefuseException.class);
+        verifier(true, "Bob (invité) ne peut pas ajouter de besoin (règle 1)");
+
+        service.prendreEnCharge(bob, idSoiree, enceinte.getId());
+        echec(() -> service.prendreEnCharge(chloe, idSoiree, jus.getId()), IllegalStateException.class);
+        verifier(true, "Chloé (non invitée) ne peut pas prendre de besoin (règle 3)");
+
+        String refus = echec(() -> service.inviter(bob, idSoiree, "chloe@example.org"), AccesRefuseException.class);
+        System.out.println("   Bob tente d'inviter Chloé -> " + refus);
+
+        service.envoyerMessage(alice, idSoiree, bob.getId(), "Merci pour l'enceinte !");
+        echec(() -> service.envoyerMessage(chloe, idSoiree, alice.getId(), "Je peux venir ?"),
+                AccesRefuseException.class);
+        verifier(true, "Chloé (non participante) ne peut pas écrire dans la soirée (règle 3)");
+
+        // ------------------------------------------------------------ relecture = redémarrage du serveur
+        System.out.println("\n5. Relecture complète depuis la base (comme après un redémarrage)");
+        ServiceEvenements apresRedemarrage = ServiceEvenements.creerParDefaut();
+        Evenement relue = apresRedemarrage.trouverEvenement(idSoiree);
+        System.out.println("   " + relue);
+        for (Besoin b : relue.getBesoins()) {
+            System.out.println("     - " + b);
+        }
+        verifier(relue.getInvitationDe(bob).orElseThrow().getStatut() == StatutInvitation.ACCEPTEE,
+                "invitation de Bob ACCEPTEE");
+        verifier(bob.equals(relue.getBesoin(enceinte.getId()).orElseThrow().getAcheteur()),
+                "Bob achète l'enceinte");
+        verifier(relue.calculerBudget() == 42.0, "budget total = 42 €");
+        verifier(relue.getParticipants().size() == 2, "2 participants (Alice + Bob)");
+        for (Message m : apresRedemarrage.messagesDe(bob)) {
+            System.out.println("   Message reçu par Bob : " + m.afficher());
+        }
+        verifier(apresRedemarrage.messagesDe(bob).size() == 1, "Bob a 1 message (F24)");
+
+        // ------------------------------------------------------------ transaction
+        System.out.println("\n6. Transaction : Bob refuse après avoir accepté (F20)");
+        service.repondreInvitation(bob, idSoiree, false);
+        Evenement apresRefus = service.trouverEvenement(idSoiree);
+        verifier(!apresRefus.getBesoin(enceinte.getId()).orElseThrow().estAchete(),
+                "l'enceinte n'a plus d'acheteur : elle revient aux organisateurs");
+        verifier(apresRefus.getInvitationDe(bob).orElseThrow().getStatut() == StatutInvitation.REFUSEE,
+                "invitation REFUSEE");
+
+        // ------------------------------------------------------------ mariage, co-organisateur
+        System.out.println("\n7. Mariage (budget traiteur automatique) et co-organisateur");
+        Evenement mariage = service.creerEvenement(chloe, "Mariage de Chloé", "Lille", 0, null,
+                LocalDateTime.now().plusYears(1).withSecond(0).withNano(0), TypeEvenement.MARIAGE);
+        service.ajouterOrganisateur(chloe, mariage.getId(), "david@example.org");
+        Evenement mariageRelu = service.trouverEvenement(mariage.getId());
+        System.out.println("   " + mariageRelu + ", organisateurs : " + mariageRelu.getOrganisateurs().size());
+        verifier(mariageRelu.getBesoins().size() == 1, "budget traiteur ajouté une fois");
+        verifier(mariageRelu.getOrganisateurs().size() == 2, "David est co-organisateur");
+
+        // ------------------------------------------------------------ suppression
+        System.out.println("\n8. Suppression de la soirée (ON DELETE CASCADE)");
+        echec(() -> service.supprimerEvenement(bob, idSoiree), AccesRefuseException.class);
+        service.supprimerEvenement(alice, idSoiree);
+        verifier(compter("SELECT COUNT(*) FROM besoin WHERE id_evenement = " + idSoiree) == 0
+                        && compter("SELECT COUNT(*) FROM invitation WHERE id_evenement = " + idSoiree) == 0
+                        && compter("SELECT COUNT(*) FROM message WHERE id_evenement = " + idSoiree) == 0
+                        && compter("SELECT COUNT(*) FROM organisateur WHERE id_evenement = " + idSoiree) == 0,
+                "besoins, invitations, messages et organisateurs supprimés avec l'événement");
+
+        System.out.println("\nTout fonctionne (" + verifications + " vérifications).");
+    }
+
+    // ------------------------------------------------------------------ outils de test
+
+    private static void verifier(boolean condition, String description) {
+        if (!condition) {
+            throw new AssertionError("ÉCHEC : " + description);
+        }
+        verifications++;
+        System.out.println("   OK  " + description);
+    }
+
+    /** Vérifie que l'action lève bien l'exception attendue et renvoie son message. */
+    private static String echec(Runnable action, Class<? extends RuntimeException> attendue) {
         try {
-            service.emprunter(idBob, idCeleste, 14);
-            System.out.println("   ERREUR : Bob n'aurait pas dû pouvoir emprunter !");
-        } catch (MediaIndisponibleException ex) {
-            System.out.println("   Bob   : refusé -> " + ex.getMessage());
+            action.run();
+        } catch (RuntimeException e) {
+            if (attendue.isInstance(e)) {
+                return e.getMessage();
+            }
+            throw new AssertionError("Exception inattendue : " + e, e);
         }
-        System.out.println("   Stock après : " + medias.trouver(idCeleste).orElseThrow());
+        throw new AssertionError("Une " + attendue.getSimpleName() + " était attendue");
+    }
 
-        System.out.println("\n5. Emprunts en cours d'Alice, retard calculé (pas stocké)");
-        List<Emprunt> enCours = emprunts.trouverEnCours(idAlice);
-        for (Emprunt e : enCours) {
-            System.out.println("   " + e + " | en retard aujourd'hui : " + e.estEnRetard(LocalDate.now())
-                    + " | en retard dans 30 jours : " + e.estEnRetard(LocalDate.now().plusDays(30)));
+    private static int compter(String sql) throws Exception {
+        try (Connection c = ConnexionBD.get(); Statement st = c.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            rs.next();
+            return rs.getInt(1);
         }
-
-        System.out.println("\n6. Retour (transaction : retour + stock)");
-        service.rendre(e1.getId());
-        System.out.println("   Stock après retour : " + medias.trouver(idCeleste).orElseThrow());
-        System.out.println("   Emprunts en cours d'Alice : " + emprunts.trouverEnCours(idAlice).size());
-
-        System.out.println("\nTout fonctionne.");
     }
 }
