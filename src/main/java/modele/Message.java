@@ -1,65 +1,66 @@
 package modele;
 
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
+/** Message texte d'une personne à une autre, au sein d'un événement. */
 public class Message {
-    private final int id;
-    private String contenu;
-    private Date LocalDateTime;
-    private Personne envoyeur;
-    private Personne receveur;
+    private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-    public Message(int id, String contenu, Date LocalDateTime, Personne envoyeur, Personne receveur) {
+    private int id;
+    private final Personne envoyeur;
+    private final Personne receveur;
+    private final String contenu;
+    private final LocalDateTime date;
+
+    public Message(int id, Personne envoyeur, Personne receveur, String contenu, LocalDateTime date) {
+        if (envoyeur == null || receveur == null) {
+            throw new IllegalArgumentException("Envoyeur et receveur sont obligatoires");
+        }
+        if (contenu == null || contenu.isBlank()) {
+            throw new IllegalArgumentException("Le message est vide");
+        }
         this.id = id;
-        this.contenu = contenu;
-        this.LocalDateTime = LocalDateTime;
         this.envoyeur = envoyeur;
         this.receveur = receveur;
+        this.contenu = contenu;
+        this.date = date == null ? LocalDateTime.now() : date;
+    }
+
+    public String afficher() {
+        return "[" + date.format(FORMAT) + "] " + envoyeur.getNomComplet() + " -> "
+                + receveur.getNomComplet() + " : " + contenu;
     }
 
     public int getId() {
         return id;
     }
 
-    public String getContenu() {
-        return contenu;
-    }
-
-    public void setContenu(String contenu) {
-        this.contenu = contenu;
-    }
-
-    public Date getLocalDateTime() {
-        return LocalDateTime;
-    }
-
-    public void setLocalDateTime(Date LocalDateTime) {
-        this.LocalDateTime = LocalDateTime;
+    public void setId(int id) {
+        if (this.id != 0) {
+            throw new IllegalStateException("L'identifiant est déjà attribué");
+        }
+        this.id = id;
     }
 
     public Personne getEnvoyeur() {
         return envoyeur;
     }
 
-    public void setEnvoyeur(Personne envoyeur) {
-        this.envoyeur = envoyeur;
-    }
-
     public Personne getReceveur() {
         return receveur;
     }
 
-    public void setReceveur(Personne receveur) {
-        this.receveur = receveur;
+    public String getContenu() {
+        return contenu;
     }
 
-    public String Afficher () {
-        return "Message{" +
-                "id=" + id +
-                ", contenu='" + contenu + '\'' +
-                ", LocalDateTime=" + LocalDateTime +
-                ", envoyeur=" + envoyeur.getNom() + " " + envoyeur.getPrenom() +
-                ", receveur=" + receveur.getNom() + " " + receveur.getPrenom() +
-                '}';
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    @Override
+    public String toString() {
+        return afficher();
     }
 }

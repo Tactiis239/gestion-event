@@ -1,59 +1,77 @@
 package modele;
 
-public class Besoin {
-    private final int id;
+/** Ce qu'il faut acheter ou apporter pour un événement.*/
+public abstract class Besoin {
+    private int id;
     private String nom;
     private double prix;
     private int quantite;
     private Personne acheteur;
 
-    public Besoin(int id, String nom, double prix, int quantite, Personne acheteur) {
+    protected Besoin(int id, String nom, double prix, int quantite) {
+        if (nom == null || nom.isBlank()) {
+            throw new IllegalArgumentException("Le nom du besoin est obligatoire");
+        }
+        if (prix < 0) {
+            throw new IllegalArgumentException("Le prix ne peut pas être négatif");
+        }
+        if (quantite <= 0) {
+            throw new IllegalArgumentException("La quantité doit être strictement positive");
+        }
         this.id = id;
         this.nom = nom;
         this.prix = prix;
         this.quantite = quantite;
-        this.acheteur = acheteur;
+    }
+
+    /**
+     * Attribue l'achat à une personne.
+     */
+    public void acheter(Personne p) {
+        if (p == null) {
+            throw new IllegalArgumentException("L'acheteur est obligatoire");
+        }
+        this.acheteur = p;
+    }
+
+    public boolean estAchete() {
+        return acheteur != null;
+    }
+
+    public double calculerCout() {
+        return prix * quantite;
     }
 
     public int getId() {
         return id;
     }
 
-    public String getNom() {
-        return nom;
+    public void setId(int id) {
+        if (this.id != 0) {
+            throw new IllegalStateException("L'identifiant est déjà attribué");
+        }
+        this.id = id;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
+    public String getNom() {
+        return nom;
     }
 
     public double getPrix() {
         return prix;
     }
 
-    public void setPrix(double prix) {
-        this.prix = prix;
-    }
-
     public int getQuantite() {
         return quantite;
-    }
-
-    public void setQuantite(int quantite) {
-        this.quantite = quantite;
     }
 
     public Personne getAcheteur() {
         return acheteur;
     }
 
-    public void setAcheteur(Personne acheteur) {
-        this.acheteur = acheteur;
-    }
-    public boolean estAchete() {
-        return acheteur != null;
-    }
-    public double calculerCout() {
-        return prix * quantite;
+    @Override
+    public String toString() {
+        String qui = estAchete() ? acheteur.getNomComplet() : "les organisateurs";
+        return String.format("%s x%d (%.2f €) [%s] acheté par %s", nom, quantite, calculerCout(), getClass().getSimpleName(), qui);
     }
 }

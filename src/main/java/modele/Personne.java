@@ -1,18 +1,29 @@
 package modele;
 
-import java.time.LocalDate;
+import org.mindrot.jbcrypt.BCrypt;
 
+import java.time.LocalDate;
+import java.time.Period;
+
+/** Classe représentant une personne. */
 public class Personne {
-    private final int id;
+    private int id;
     private String nom;
     private String prenom;
     private String telephone;
-    public byte[] avatar;
+    private byte[] avatar;
     private String email;
     private String mdpHash;
     private LocalDate dateNaissance;
 
-    public Personne(int id, String nom, String prenom, String telephone, byte[] avatar, String email, String mdpHash, LocalDate dateNaissance) {
+    public Personne(int id, String nom, String prenom, String telephone, byte[] avatar,
+                    String email, String mdpHash, LocalDate dateNaissance) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("L'e-mail est obligatoire");
+        }
+        if (mdpHash == null || mdpHash.isBlank()) {
+            throw new IllegalArgumentException("Le haché du mot de passe est obligatoire");
+        }
         this.id = id;
         this.nom = nom;
         this.prenom = prenom;
@@ -21,11 +32,35 @@ public class Personne {
         this.email = email;
         this.mdpHash = mdpHash;
         this.dateNaissance = dateNaissance;
-        
+    }
+
+    public boolean seConnecter(String email, String mdp) {
+        if (email == null || mdp == null || !this.email.equalsIgnoreCase(email)) {
+            return false;
+        }
+        return BCrypt.checkpw(mdp, mdpHash);
+    }
+
+    public String getNomComplet() {
+        return prenom + " " + nom;
+    }
+
+    public int getAge() {
+        if (dateNaissance == null) {
+            return 0;
+        }
+        return Period.between(dateNaissance, LocalDate.now()).getYears();
     }
 
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        if (this.id != 0) {
+            throw new IllegalStateException("L'identifiant est déjà attribué");
+        }
+        this.id = id;
     }
 
     public String getNom() {
@@ -52,15 +87,7 @@ public class Personne {
         this.telephone = telephone;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-     public byte[] getAvatar() {
+    public byte[] getAvatar() {
         return avatar;
     }
 
@@ -68,12 +95,12 @@ public class Personne {
         this.avatar = avatar;
     }
 
-    public String getMdpHash() {
-        return mdpHash;
+    public String getEmail() {
+        return email;
     }
 
-    public void setMdpHash(String mdpHash) {
-        this.mdpHash = mdpHash;
+    public String getMdpHash() {
+        return mdpHash;
     }
 
     public LocalDate getDateNaissance() {
@@ -83,30 +110,21 @@ public class Personne {
     public void setDateNaissance(LocalDate dateNaissance) {
         this.dateNaissance = dateNaissance;
     }
-    
-    public String getNomComplet() {
-        return nom + " " + prenom;
-    }
-    public int getAge() {
-        if (dateNaissance == null) {
-            return 0; // ou une autre valeur par défaut
-        }
-        if (dateNaissance.getMonth().getValue() > LocalDate.now().getMonth().getValue()) {
-            return LocalDate.now().getYear() - dateNaissance.getYear() - 1;
-        }
-        else {
-            return LocalDate.now().getYear() - dateNaissance.getYear();
-        }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Personne autre)) return false;
+        return id != 0 && id == autre.id;
     }
 
-    boolean verifierMotDePasse(String motDePasse) {
-        // Implémentation de la vérification du mot de passe B-Crypt
-        return false; // Remplacez par la logique réelle de vérification du mot de passe
+    @Override
+    public int hashCode() {
+        return id != 0 ? Integer.hashCode(id) : System.identityHashCode(this);
     }
 
     @Override
     public String toString() {
-        return "Utilisateur [id=" + id + ", nom=" + nom + ", prenom=" + prenom + ", telephone=" + telephone + ", email="
-                + email + ", dateNaissance=" + dateNaissance + "]";
+        return "Personne[id=" + id + ", " + getNomComplet() + ", " + email + "]";
     }
 }

@@ -1,11 +1,15 @@
 package modele;
 
-public class Materiel extends Besoin {
-    private boolean aRendre;
+/** Matériel à louer ou à vendre. */
+public abstract class Materiel extends Besoin {
+    private final boolean aRendre;
     private EtatMateriel etat;
 
-    public Materiel(int id, String nom, double prix, int quantite, Personne acheteur, boolean aRendre, EtatMateriel etat) {
-        super(id, nom, prix, quantite, acheteur);
+    protected Materiel(int id, String nom, double prix, int quantite, boolean aRendre, EtatMateriel etat) {
+        super(id, nom, prix, quantite);
+        if (etat == null) {
+            throw new IllegalArgumentException("L'état du matériel est obligatoire");
+        }
         this.aRendre = aRendre;
         this.etat = etat;
     }
@@ -14,16 +18,19 @@ public class Materiel extends Besoin {
         return aRendre;
     }
 
-    public void setARendre(boolean aRendre) {
-        this.aRendre = aRendre;
-    }
-
     public EtatMateriel getEtat() {
         return etat;
     }
 
     public void setEtat(EtatMateriel etat) {
+        if (etat == null) {
+            throw new IllegalArgumentException("L'état du matériel est obligatoire");
+        }
         this.etat = etat;
     }
-    
+
+    @Override
+    public String toString() {
+        return super.toString() + " - état " + etat + (aRendre ? ", à rendre" : "");
+    }
 }

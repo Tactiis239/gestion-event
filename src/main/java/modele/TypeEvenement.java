@@ -1,8 +1,9 @@
 package modele;
 
+/** Type d'un événement. */
 public enum TypeEvenement {
     ANNIVERSAIRE,
-    MARRIAGE,
+    MARIAGE,
     SOIREE,
     AUTRE
 }
