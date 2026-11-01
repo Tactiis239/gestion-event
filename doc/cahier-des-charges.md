@@ -278,8 +278,6 @@ Comme dans le kit de la séance 2, le DAO fait le SQL et le service (`ServiceEve
 
 ## 9. Conception UML
 
-Les sources PlantUML (`.puml`) et les images sont dans le dossier `uml/`.
-
 ### 9.1 Diagramme de cas d'utilisation
 
 ![Diagramme de cas d'utilisation](uml/cas-utilisation.png)
