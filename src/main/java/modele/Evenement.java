@@ -85,6 +85,11 @@ public class Evenement {
 
     public void ajouterOrganisateur(Personne appelant, Personne p) {
         verifierOrganisateur(appelant, "ajouter un co-organisateur");
+
+        if (estParticipant(p)) {
+            throw new IllegalStateException(p.getNomComplet() + " est déjà participant");
+        }
+
         if (estOrganisateur(p)) {
             throw new IllegalStateException(p.getNomComplet() + " est déjà organisateur");
         }
