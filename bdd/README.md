@@ -19,8 +19,7 @@ Code Java associé : `ConnexionBD`, `InitBase` (`serveur.bdd`), les DAO (`serveu
 ![MCD](mcd.png)
 
 Conventions Merise : chaque attribut porte un nom unique dans tout le MCD (`id_personne`, `nom_evenement`…),
-les données calculées (coût, budget, âge, participants) n'y figurent pas, et la contrainte **X** interdit qu'une
-même personne soit à la fois organisatrice et invitée d'un événement.
+et les données calculées (coût, budget, âge, participants) n'y figurent pas.
 
 ## MLD
 
@@ -34,7 +33,7 @@ Clé primaire soulignée, clé étrangère précédée de `#`. Dans les tables, 
 - **besoin** (<u>id</u>, #id_evenement, #id_acheteur, type, nom, prix, quantite, perissable, a_rendre, etat, decibels, puissance_watts, lumens, couleur)
 - **message** (<u>id</u>, #id_evenement, #id_envoyeur, #id_receveur, contenu, date_envoi)
 
-Héritage : le MCD montre la spécialisation de BESOIN (CONSOMMABLE, MATERIEL → MATERIEL_SON, MATERIEL_LUMIERE, partition XT).
+Héritage : dans le MCD, chaque sous-type de BESOIN (CONSOMMABLE, MATERIEL → MATERIEL_SON, MATERIEL_LUMIERE) n'a que ses propres attributs.
 Le MLD la ramène à une table unique `besoin` avec une colonne `type` (justification : cahier des charges, 8.2) : les colonnes
 d'un sous-type (ex. `puissance_watts`) restent `NULL` pour les autres, et des `CHECK` interdisent qu'un consommable en ait une.
 

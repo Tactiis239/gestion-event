@@ -47,9 +47,6 @@ graph MCD {
         <tr><td align="left">lumens<br align="left"/>couleur<br align="left"/></td></tr>
       </table>>];
 
-    // Contrainte de partition (XT) : un besoin est exactement d'un sous-type
-    SPEC_BESOIN   [pos="4,-2!",     label="XT", shape=triangle, width=0.5, height=0.4, fontsize=9, fixedsize=true];
-    SPEC_MATERIEL [pos="6.5,-5.3!", label="XT", shape=triangle, width=0.5, height=0.4, fontsize=9, fixedsize=true];
     MESSAGE [pos="4,8.2!", label=<
       <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
         <tr><td bgcolor="#dddddd"><b>MESSAGE</b></td></tr>
@@ -65,10 +62,6 @@ graph MCD {
     ENVOYER   [pos="0.6,7.2!", label="ENVOYER"];
     RECEVOIR  [pos="2,6.6!",  label="RECEVOIR"];
     CONCERNER [pos="7.4,7.2!", label="CONCERNER"];
-
-    // Contrainte d'exclusion : pour un même événement, une personne est
-    // organisatrice OU invitée, jamais les deux
-    EXCLUSION [pos="5.7,4.2!", label="X", shape=circle, style=solid, width=0.35, fixedsize=true, fontsize=10];
 
     // ---------------------------------------------------------------- cardinalités
     PERSONNE  -- ORGANISER [label="0,n"];
@@ -90,14 +83,10 @@ graph MCD {
     EVENEMENT -- CONCERNER [label="0,n"];
     CONCERNER -- MESSAGE   [label="1,1"];
 
-    EXCLUSION -- ORGANISER [style=dashed];
-    EXCLUSION -- INVITER   [style=dashed];
-
-    // ---------------------------------------------------------------- spécialisations
-    BESOIN        -- SPEC_BESOIN;
-    SPEC_BESOIN   -- CONSOMMABLE;
-    SPEC_BESOIN   -- MATERIEL;
-    MATERIEL      -- SPEC_MATERIEL;
-    SPEC_MATERIEL -- MATERIEL_SON;
-    SPEC_MATERIEL -- MATERIEL_LUMIERE;
+    // ---------------------------------------------------------------- héritage (flèche vers le parent)
+    edge [dir=forward, arrowhead=empty, arrowsize=1.2];
+    CONSOMMABLE      -- BESOIN;
+    MATERIEL         -- BESOIN;
+    MATERIEL_SON     -- MATERIEL;
+    MATERIEL_LUMIERE -- MATERIEL;
 }
