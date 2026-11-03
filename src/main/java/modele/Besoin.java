@@ -25,17 +25,10 @@ public abstract class Besoin {
     }
 
     /**
-     * Attribue l'achat à une personne.
+     * Attribue l'achat à une personne ; null rend le besoin aux organisateurs.
      */
     public void acheter(Personne p) {
-        if (p == null) {
-            throw new IllegalArgumentException("L'acheteur est obligatoire");
-        }
         this.acheteur = p;
-    }
-
-    public void liberer() {
-        this.acheteur = null;
     }
 
     public boolean estAchete() {

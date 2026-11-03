@@ -18,9 +18,14 @@ Code Java associé : `ConnexionBD`, `InitBase` (`serveur.bdd`), les DAO (`serveu
 
 ![MCD](mcd.png)
 
+Conventions Merise : chaque attribut porte un nom unique dans tout le MCD (`id_personne`, `nom_evenement`…),
+les données calculées (coût, budget, âge, participants) n'y figurent pas, et la contrainte **X** interdit qu'une
+même personne soit à la fois organisatrice et invitée d'un événement.
+
 ## MLD
 
-Clé primaire soulignée, clé étrangère précédée de `#`.
+Clé primaire soulignée, clé étrangère précédée de `#`. Dans les tables, le nom de la table sert de préfixe :
+`id_personne` du MCD devient `personne.id`, `nom_evenement` devient `evenement.nom`, `prix_unitaire` devient `besoin.prix`.
 
 - **personne** (<u>id</u>, nom, prenom, telephone, avatar, email, mdp_hash, date_naissance)
 - **evenement** (<u>id</u>, nom, lieu, prix, logo, banniere, description, date_evenement, type)
@@ -29,7 +34,9 @@ Clé primaire soulignée, clé étrangère précédée de `#`.
 - **besoin** (<u>id</u>, #id_evenement, #id_acheteur, type, nom, prix, quantite, perissable, a_rendre, etat, decibels, puissance_watts, lumens, couleur)
 - **message** (<u>id</u>, #id_evenement, #id_envoyeur, #id_receveur, contenu, date_envoi)
 
-Héritage `Besoin` → table unique `besoin` avec une colonne `type` (justification : cahier des charges, 8.2).
+Héritage : le MCD montre la spécialisation de BESOIN (CONSOMMABLE, MATERIEL → MATERIEL_SON, MATERIEL_LUMIERE, partition XT).
+Le MLD la ramène à une table unique `besoin` avec une colonne `type` (justification : cahier des charges, 8.2) : les colonnes
+d'un sous-type (ex. `puissance_watts`) restent `NULL` pour les autres, et des `CHECK` interdisent qu'un consommable en ait une.
 
 ## Recréer la base
 

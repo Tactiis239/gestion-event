@@ -16,11 +16,14 @@ class Evenement {
   -description: String
   -dateEvenement: LocalDateTime
   -type: TypeEvenement
-  +inviter(appelant: Personne, p: Personne): void
+  +inviter(appelant: Personne, p: Personne): Invitation
+  +repondreInvitation(invite: Personne, accepte: boolean): void
   +ajouterOrganisateur(appelant: Personne, p: Personne): void
   +estOrganisateur(p: Personne): boolean
-  +ajouterBesoin(b: Besoin): void
-  +supprimerBesoin(b: Besoin): void
+  +estParticipant(p: Personne): boolean
+  +ajouterBesoin(appelant: Personne, b: Besoin): void
+  +supprimerBesoin(appelant: Personne, b: Besoin): void
+  +attribuerBesoin(appelant: Personne, b: Besoin, acheteur: Personne): void
   +envoyerMessage(m: Message): void
   +getParticipants(): List<Personne>
   +calculerBudget(): double
@@ -106,6 +109,9 @@ class Personne {
   +getAge(): int
 }
 
+class AccesRefuseException <<exception>> {
+}
+
 Evenement "*" o-- "1..*" Personne : organisateurs
 Evenement "1" *-- "*" Invitation : invitations
 Evenement "1" *-- "*" Besoin : besoins
@@ -121,10 +127,16 @@ Besoin <|-- Materiel
 Materiel <|-- MaterielSon
 Materiel <|-- MaterielLumiere
 
+Evenement ..> AccesRefuseException : <<throw>>
+
 note right of Evenement
-  **inviter()**, **ajouterOrganisateur()** :
+  **inviter()**, **ajouterOrganisateur()**,
+  **ajouterBesoin()**, **supprimerBesoin()** :
   ne fonctionnent que si l'appelant
   est dans la liste des organisateurs.
+  **attribuerBesoin()** : l'acheteur doit être
+  participant (**estParticipant()**) ; un invité
+  ne peut se l'attribuer qu'à lui-même.
   **Création** : si type = MARIAGE,
   un budget traiteur (Consommable)
   est ajouté une fois aux besoins.

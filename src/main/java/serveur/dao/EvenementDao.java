@@ -97,7 +97,7 @@ public class EvenementDao implements Dao<Evenement> {
             e.chargerInvitation(i);
         }
         for (Besoin b : besoins.trouverParEvenement(c, id, cache)) {
-            e.ajouterBesoin(b);
+            e.chargerBesoin(b);
         }
         for (Message m : messages.trouverParEvenement(c, id, cache)) {
             e.chargerMessage(m);

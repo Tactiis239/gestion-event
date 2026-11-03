@@ -56,6 +56,11 @@ public class MainTestBDD {
         String msgEmailInconnu = echec(() -> auth.seConnecter("inconnu@example.org", "motdepasse"),
                 AuthentificationException.class);
         verifier(msgMauvaisMdp.equals(msgEmailInconnu), "même message pour mauvais mdp et e-mail inconnu (F2)");
+        Personne emma = auth.creerCompte("Moreau", "Emma", "emma@example.org", "secret", null);
+        verifier(auth.seConnecter(" emma@example.org ", "secret").equals(emma),
+                "compte créé (haché bcrypt) puis connexion, espaces autour de l'e-mail ignorés");
+        echec(() -> auth.creerCompte("Moreau", "Emma", "EMMA@example.org", "autre", null), RuntimeException.class);
+        verifier(true, "même e-mail à la casse près refusé (UNIQUE COLLATE NOCASE)");
 
         // ------------------------------------------------------------ données de test
         System.out.println("\n3. Données de test relues (Factory sur la colonne type)");
@@ -90,12 +95,18 @@ public class MainTestBDD {
                 AccesRefuseException.class);
         verifier(true, "Bob (invité) ne peut pas ajouter de besoin (règle 1)");
 
+        echec(() -> service.attribuerBesoin(bob, idSoiree, jus.getId(), alice.getId()), AccesRefuseException.class);
+        verifier(true, "Bob (invité) ne peut pas attribuer un besoin à quelqu'un d'autre (règle 1)");
         service.prendreEnCharge(bob, idSoiree, enceinte.getId());
+        echec(() -> service.ajouterOrganisateur(alice, idSoiree, "bob@example.org"), IllegalStateException.class);
+        verifier(true, "Bob, déjà invité, ne peut pas devenir co-organisateur");
         echec(() -> service.prendreEnCharge(chloe, idSoiree, jus.getId()), IllegalStateException.class);
         verifier(true, "Chloé (non invitée) ne peut pas prendre de besoin (règle 3)");
 
         String refus = echec(() -> service.inviter(bob, idSoiree, "chloe@example.org"), AccesRefuseException.class);
         System.out.println("   Bob tente d'inviter Chloé -> " + refus);
+        echec(() -> service.inviter(bob, idSoiree, "inconnu@example.org"), AccesRefuseException.class);
+        verifier(true, "un invité ne peut pas savoir si un e-mail existe (droits vérifiés avant la recherche)");
 
         service.envoyerMessage(alice, idSoiree, bob.getId(), "Merci pour l'enceinte !");
         echec(() -> service.envoyerMessage(chloe, idSoiree, alice.getId(), "Je peux venir ?"),
@@ -129,6 +140,20 @@ public class MainTestBDD {
                 "l'enceinte n'a plus d'acheteur : elle revient aux organisateurs");
         verifier(apresRefus.getInvitationDe(bob).orElseThrow().getStatut() == StatutInvitation.REFUSEE,
                 "invitation REFUSEE");
+
+        // ------------------------------------------------------------ modification, besoins (F7, F17, F18)
+        System.out.println("\n6 bis. Modification et gestion des besoins par l'organisatrice");
+        service.modifierEvenement(alice, idSoiree, "Soirée de fin d'année", "Chez Alice", 5, null,
+                apresRefus.getDateEvenement(), TypeEvenement.SOIREE);
+        echec(() -> service.modifierEvenement(bob, idSoiree, "Piratée", null, 0, null,
+                apresRefus.getDateEvenement(), TypeEvenement.AUTRE), AccesRefuseException.class);
+        verifier(service.trouverEvenement(idSoiree).getNom().equals("Soirée de fin d'année"),
+                "Alice modifie la soirée, Bob ne peut pas (F7, règle 1)");
+        service.attribuerBesoin(alice, idSoiree, jus.getId(), alice.getId());
+        verifier(alice.equals(service.trouverEvenement(idSoiree).getBesoin(jus.getId()).orElseThrow().getAcheteur()),
+                "Alice attribue le jus à une participante (F18)");
+        service.supprimerBesoin(alice, idSoiree, jus.getId());
+        verifier(service.trouverEvenement(idSoiree).getBesoin(jus.getId()).isEmpty(), "Alice supprime le jus (F17)");
 
         // ------------------------------------------------------------ mariage, co-organisateur
         System.out.println("\n7. Mariage (budget traiteur automatique) et co-organisateur");

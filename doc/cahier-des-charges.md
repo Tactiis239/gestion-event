@@ -111,7 +111,7 @@ Priorités : **P1** = MVP, indispensable à la démonstration ; **P2** = prévu,
 | F12 | Un organisateur invite une personne existante (par son e-mail). L'invitation est créée avec le statut `EN_ATTENTE` (`inviter()`).          | P1       |
 | F13 | Seul un organisateur de l'événement peut y inviter quelqu'un (`estOrganisateur()`, sinon `AccesRefuseException`).                                 | P1       |
 | F14 | Une même personne ne peut pas être invitée deux fois au même événement.                                                      | P1       |
-| F15 | L'invité consulte ses invitations et les accepte ou les refuse (`accepter()`, `refuser()`). | P1       |
+| F15 | L'invité consulte ses invitations et les accepte ou les refuse (`repondreInvitation()`, qui appelle `accepter()` ou `refuser()`). | P1       |
 | F16 | Les organisateurs voient l'état de chaque invitation (en attente, acceptée, refusée).                                        | P1       |
 
 ### 4.4 Besoins et budget (héritage / polymorphisme)
@@ -119,9 +119,9 @@ Priorités : **P1** = MVP, indispensable à la démonstration ; **P2** = prévu,
 | ID  | Exigence                                                                                                                                                                                                                  | Priorité |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | F17 | Un organisateur ajoute ou supprime un besoin (`ajouterBesoin()`, `supprimerBesoin()` ; nom, prix unitaire, quantité) : **consommable** (périssable ou non) ou **matériel** (à rendre ou non, état : neuf, bon, usé, hors service), décliné en **matériel son** (décibels, puissance) ou **matériel lumière** (lumens, couleur). | P1       |
-| F18 | Un organisateur attribue l'achat d'un besoin à un participant (`acheter()`).                                                                                                                                                            | P1       |
+| F18 | Un organisateur attribue l'achat d'un besoin à un participant (`attribuerBesoin()`, qui appelle `acheter()`).                                                                                                                                                            | P1       |
 | F19 | Un invité ayant **accepté** l'invitation (`estAcceptee()`) peut prendre en charge lui-même un besoin sans acheteur.                                                                                                                         | P1       |
-| F20 | L'invité peut changer d'avis tant que l'événement n'est pas passé ; s'il refuse après avoir accepté, ses besoins n'ont plus d'acheteur (règle 3).                                                               | P2       |
+| F20 | L'invité peut changer d'avis tant que l'événement n'est pas passé ; s'il refuse après avoir accepté, ses besoins n'ont plus d'acheteur (`acheter(null)`, règle 3).                                                               | P2       |
 | F21 | Un besoin sans acheteur est acheté par les organisateurs. Les participants voient qui achète quoi (`getNomComplet()` de l'acheteur).                                                                                                                    | P1       |
 | F22 | L'application calcule le coût de chaque besoin (`calculerCout()` = prix × quantité) et le budget total de l'événement (`calculerBudget()`).                                                                               | P1       |
 
@@ -153,7 +153,7 @@ Priorités : **P1** = MVP, indispensable à la démonstration ; **P2** = prévu,
 
 1. Seuls les organisateurs modifient, suppriment, invitent, ajoutent un co-organisateur et gèrent les besoins de l'événement.
 2. Un invité n'agit que sur **ses** invitations.
-3. Seuls les participants (organisateurs + invités ayant accepté) peuvent se voir attribuer un besoin ou échanger des messages dans l'événement.
+3. Seuls les participants (organisateurs + invités ayant accepté, `estParticipant()`) peuvent se voir attribuer un besoin ou échanger des messages dans l'événement.
 4. Un événement a toujours au moins un organisateur.
 5. Toute violation d'une règle lève une exception (`AccesRefuseException` pour les droits, `IllegalStateException` pour les autres règles, ex. besoin pris sans avoir accepté), transformée par le serveur en `Reponse` d'échec avec un message clair.
 
@@ -239,7 +239,7 @@ Toute la hiérarchie `Besoin` (`Consommable`, `MaterielSon`, `MaterielLumiere`) 
 
 | Contrainte                                                                     | Règle protégée               |
 | ------------------------------------------------------------------------------ | ---------------------------- |
-| `UNIQUE (email)` sur `personne`                                                | Un compte par e-mail (F1)    |
+| `UNIQUE (email)` sur `personne`, insensible à la casse (`COLLATE NOCASE`)      | Un compte par e-mail (F1)    |
 | `UNIQUE (id_evenement, id_personne)` sur `invitation`                          | Pas de double invitation (F14) |
 | `CHECK (statut IN ('EN_ATTENTE', 'ACCEPTEE', 'REFUSEE'))`                      | Enum `StatutInvitation`      |
 | `CHECK (type IN ('ANNIVERSAIRE', 'MARIAGE', 'SOIREE', 'AUTRE'))`               | Enum `TypeEvenement`         |

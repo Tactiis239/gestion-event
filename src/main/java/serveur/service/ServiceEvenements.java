@@ -72,7 +72,7 @@ public class ServiceEvenements {
                                                  String description, LocalDateTime date, TypeEvenement type) {
         Evenement e = new Evenement(0, nom, lieu, prix, description, date, type, createur);
         if (type == TypeEvenement.MARIAGE) {
-            e.ajouterBesoin(new Consommable(0, "Budget traiteur", BUDGET_TRAITEUR_DEFAUT, 1, true));
+            e.ajouterBesoin(createur, new Consommable(0, "Budget traiteur", BUDGET_TRAITEUR_DEFAUT, 1, true));
         }
         Transaction.executerSansRetour(c -> {
             evenements.creer(c, e);
@@ -93,15 +93,13 @@ public class ServiceEvenements {
     }
 
     public synchronized void supprimerEvenement(Personne appelant, int idEvenement) {
-        Evenement e = trouverEvenement(idEvenement);
-        if (!e.estOrganisateur(appelant)) {
-            throw new AccesRefuseException("seul un organisateur peut supprimer l'événement");
-        }
+        trouverEvenement(idEvenement).verifierOrganisateur(appelant, "supprimer l'événement");
         Transaction.executerSansRetour(c -> evenements.supprimer(c, idEvenement));
     }
 
     public synchronized void ajouterOrganisateur(Personne appelant, int idEvenement, String email) {
         Evenement e = trouverEvenement(idEvenement);
+        e.verifierOrganisateur(appelant, "ajouter un co-organisateur"); // avant la recherche : ne révèle pas quels e-mails existent
         Personne p = personneParEmail(email);
         e.ajouterOrganisateur(appelant, p);
         Transaction.executerSansRetour(c -> evenements.ajouterOrganisateur(c, idEvenement, p.getId()));
@@ -109,6 +107,7 @@ public class ServiceEvenements {
 
     public synchronized Invitation inviter(Personne appelant, int idEvenement, String email) {
         Evenement e = trouverEvenement(idEvenement);
+        e.verifierOrganisateur(appelant, "inviter"); // avant la recherche : ne révèle pas quels e-mails existent
         Personne p = personneParEmail(email);
         Invitation i = e.inviter(appelant, p);
         Transaction.executerSansRetour(c -> invitations.creer(c, idEvenement, i));
@@ -117,7 +116,9 @@ public class ServiceEvenements {
 
     public synchronized void repondreInvitation(Personne invite, int idEvenement, boolean accepte) {
         Evenement e = trouverEvenement(idEvenement);
-        List<Besoin> liberes = e.repondreInvitation(invite, accepte);
+        // Besoins pris par l'invité avant sa réponse : un refus les rend aux organisateurs (F20)
+        List<Besoin> liberes = accepte ? List.of() : e.besoinsAchetesPar(invite);
+        e.repondreInvitation(invite, accepte);
         Invitation i = e.getInvitationDe(invite).orElseThrow();
         Transaction.executerSansRetour(c -> {
             invitations.mettreAJourStatut(c, i);

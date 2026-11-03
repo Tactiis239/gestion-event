@@ -34,6 +34,7 @@ else organisateur valide
   create participant "i:Invitation" as I
   E -> I : new Invitation(p)
   note right of I : statut = EN_ATTENTE
+  E --> S : i
   S -> ID : creer(c, idEvt, i)
   note right of ID : INSERT INTO invitation\n(PreparedStatement)
   S --> GC : ok

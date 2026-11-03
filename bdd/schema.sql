@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS personne (
     prenom          TEXT NOT NULL,
     telephone       TEXT,
     avatar          BLOB,
-    email           TEXT NOT NULL UNIQUE,
+    email           TEXT NOT NULL UNIQUE COLLATE NOCASE,
     mdp_hash        TEXT NOT NULL,              -- haché bcrypt
     date_naissance  TEXT
 );
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS evenement (
 
 CREATE TABLE IF NOT EXISTS organisateur (
     id_evenement    INTEGER NOT NULL REFERENCES evenement(id) ON DELETE CASCADE,
-    id_personne     INTEGER NOT NULL REFERENCES personne(id) ON DELETE CASCADE,
+    id_personne     INTEGER NOT NULL REFERENCES personne(id) ON DELETE RESTRICT, -- règle 4
     PRIMARY KEY (id_evenement, id_personne)
 );
 

@@ -8,16 +8,19 @@ import java.time.Period;
 /** Classe représentant une personne. */
 public class Personne {
     private int id;
-    private String nom;
-    private String prenom;
-    private String telephone;
-    private byte[] avatar;
-    private String email;
-    private String mdpHash;
-    private LocalDate dateNaissance;
+    private final String nom;
+    private final String prenom;
+    private final String telephone;
+    private final byte[] avatar;
+    private final String email;
+    private final String mdpHash;
+    private final LocalDate dateNaissance;
 
     public Personne(int id, String nom, String prenom, String telephone, byte[] avatar,
                     String email, String mdpHash, LocalDate dateNaissance) {
+        if (nom == null || nom.isBlank() || prenom == null || prenom.isBlank()) {
+            throw new IllegalArgumentException("Le nom et le prénom sont obligatoires");
+        }
         if (email == null || email.isBlank()) {
             throw new IllegalArgumentException("L'e-mail est obligatoire");
         }
@@ -29,16 +32,21 @@ public class Personne {
         this.prenom = prenom;
         this.telephone = telephone;
         this.avatar = avatar;
-        this.email = email;
+        this.email = normaliserEmail(email);
         this.mdpHash = mdpHash;
         this.dateNaissance = dateNaissance;
     }
 
     public boolean seConnecter(String email, String mdp) {
-        if (email == null || mdp == null || !this.email.equalsIgnoreCase(email)) {
+        if (email == null || mdp == null || !this.email.equals(normaliserEmail(email))) {
             return false;
         }
         return BCrypt.checkpw(mdp, mdpHash);
+    }
+
+    /** Forme unique d'un e-mail (espaces retirés, minuscules), à l'écriture comme à la recherche. */
+    public static String normaliserEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase();
     }
 
     public String getNomComplet() {
@@ -67,32 +75,16 @@ public class Personne {
         return nom;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
-    }
-
     public String getPrenom() {
         return prenom;
-    }
-
-    public void setPrenom(String prenom) {
-        this.prenom = prenom;
     }
 
     public String getTelephone() {
         return telephone;
     }
 
-    public void setTelephone(String telephone) {
-        this.telephone = telephone;
-    }
-
     public byte[] getAvatar() {
         return avatar;
-    }
-
-    public void setAvatar(byte[] avatar) {
-        this.avatar = avatar;
     }
 
     public String getEmail() {
@@ -105,10 +97,6 @@ public class Personne {
 
     public LocalDate getDateNaissance() {
         return dateNaissance;
-    }
-
-    public void setDateNaissance(LocalDate dateNaissance) {
-        this.dateNaissance = dateNaissance;
     }
 
     @Override

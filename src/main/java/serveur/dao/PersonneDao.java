@@ -32,9 +32,9 @@ public class PersonneDao implements Dao<Personne> {
     }
 
     public Optional<Personne> trouverParEmail(String email) {
-        String sql = "SELECT * FROM personne WHERE lower(email) = lower(?)";
+        String sql = "SELECT * FROM personne WHERE email = ?";
         try (Connection c = ConnexionBD.get(); PreparedStatement ps = c.prepareStatement(sql)) {
-            ps.setString(1, email == null ? "" : email.trim());
+            ps.setString(1, Personne.normaliserEmail(email));
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() ? Optional.of(mapper(rs)) : Optional.empty();
             }

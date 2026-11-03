@@ -11,22 +11,49 @@ graph MCD {
     PERSONNE [pos="0,4!", label=<
       <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
         <tr><td bgcolor="#dddddd"><b>PERSONNE</b></td></tr>
-        <tr><td align="left"><u>id</u><br align="left"/>nom<br align="left"/>prenom<br align="left"/>telephone<br align="left"/>avatar<br align="left"/>email<br align="left"/>mdp_hash<br align="left"/>date_naissance<br align="left"/></td></tr>
+        <tr><td align="left"><u>id_personne</u><br align="left"/>nom_personne<br align="left"/>prenom<br align="left"/>telephone<br align="left"/>avatar<br align="left"/>email<br align="left"/>mdp_hash<br align="left"/>date_naissance<br align="left"/></td></tr>
       </table>>];
     EVENEMENT [pos="8,4!", label=<
       <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
         <tr><td bgcolor="#dddddd"><b>EVENEMENT</b></td></tr>
-        <tr><td align="left"><u>id</u><br align="left"/>nom<br align="left"/>lieu<br align="left"/>prix<br align="left"/>logo<br align="left"/>banniere<br align="left"/>description<br align="left"/>date_evenement<br align="left"/>type<br align="left"/></td></tr>
+        <tr><td align="left"><u>id_evenement</u><br align="left"/>nom_evenement<br align="left"/>lieu<br align="left"/>prix_participation<br align="left"/>logo<br align="left"/>banniere<br align="left"/>description<br align="left"/>date_evenement<br align="left"/>type_evenement<br align="left"/></td></tr>
       </table>>];
     BESOIN [pos="4,-0.5!", label=<
       <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
         <tr><td bgcolor="#dddddd"><b>BESOIN</b></td></tr>
-        <tr><td align="left"><u>id</u><br align="left"/>type<br align="left"/>nom<br align="left"/>prix<br align="left"/>quantite<br align="left"/>perissable<br align="left"/>a_rendre<br align="left"/>etat<br align="left"/>decibels<br align="left"/>puissance_watts<br align="left"/>lumens<br align="left"/>couleur<br align="left"/></td></tr>
+        <tr><td align="left"><u>id_besoin</u><br align="left"/>nom_besoin<br align="left"/>prix_unitaire<br align="left"/>quantite<br align="left"/></td></tr>
       </table>>];
+
+    // Spécialisation de BESOIN : chaque sous-type n'a que ses propres attributs.
+    // La table unique « besoin » (colonne type) est un choix du MLD, pas du MCD.
+    CONSOMMABLE [pos="1.5,-3.6!", label=<
+      <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+        <tr><td bgcolor="#dddddd"><b>CONSOMMABLE</b></td></tr>
+        <tr><td align="left">perissable<br align="left"/></td></tr>
+      </table>>];
+    MATERIEL [pos="6.5,-3.6!", label=<
+      <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+        <tr><td bgcolor="#dddddd"><b>MATERIEL</b></td></tr>
+        <tr><td align="left">a_rendre<br align="left"/>etat<br align="left"/></td></tr>
+      </table>>];
+    MATERIEL_SON [pos="4.5,-6.8!", label=<
+      <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+        <tr><td bgcolor="#dddddd"><b>MATERIEL_SON</b></td></tr>
+        <tr><td align="left">decibels<br align="left"/>puissance_watts<br align="left"/></td></tr>
+      </table>>];
+    MATERIEL_LUMIERE [pos="8.5,-6.8!", label=<
+      <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+        <tr><td bgcolor="#dddddd"><b>MATERIEL_LUMIERE</b></td></tr>
+        <tr><td align="left">lumens<br align="left"/>couleur<br align="left"/></td></tr>
+      </table>>];
+
+    // Contrainte de partition (XT) : un besoin est exactement d'un sous-type
+    SPEC_BESOIN   [pos="4,-2!",     label="XT", shape=triangle, width=0.5, height=0.4, fontsize=9, fixedsize=true];
+    SPEC_MATERIEL [pos="6.5,-5.3!", label="XT", shape=triangle, width=0.5, height=0.4, fontsize=9, fixedsize=true];
     MESSAGE [pos="4,8.2!", label=<
       <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
         <tr><td bgcolor="#dddddd"><b>MESSAGE</b></td></tr>
-        <tr><td align="left"><u>id</u><br align="left"/>contenu<br align="left"/>date_envoi<br align="left"/></td></tr>
+        <tr><td align="left"><u>id_message</u><br align="left"/>contenu<br align="left"/>date_envoi<br align="left"/></td></tr>
       </table>>];
 
     // ---------------------------------------------------------------- associations
@@ -38,6 +65,10 @@ graph MCD {
     ENVOYER   [pos="0.6,7.2!", label="ENVOYER"];
     RECEVOIR  [pos="2,6.6!",  label="RECEVOIR"];
     CONCERNER [pos="7.4,7.2!", label="CONCERNER"];
+
+    // Contrainte d'exclusion : pour un même événement, une personne est
+    // organisatrice OU invitée, jamais les deux
+    EXCLUSION [pos="5.7,4.2!", label="X", shape=circle, style=solid, width=0.35, fixedsize=true, fontsize=10];
 
     // ---------------------------------------------------------------- cardinalités
     PERSONNE  -- ORGANISER [label="0,n"];
@@ -58,4 +89,15 @@ graph MCD {
     RECEVOIR  -- MESSAGE   [label="1,1"];
     EVENEMENT -- CONCERNER [label="0,n"];
     CONCERNER -- MESSAGE   [label="1,1"];
+
+    EXCLUSION -- ORGANISER [style=dashed];
+    EXCLUSION -- INVITER   [style=dashed];
+
+    // ---------------------------------------------------------------- spécialisations
+    BESOIN        -- SPEC_BESOIN;
+    SPEC_BESOIN   -- CONSOMMABLE;
+    SPEC_BESOIN   -- MATERIEL;
+    MATERIEL      -- SPEC_MATERIEL;
+    SPEC_MATERIEL -- MATERIEL_SON;
+    SPEC_MATERIEL -- MATERIEL_LUMIERE;
 }

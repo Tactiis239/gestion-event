@@ -30,7 +30,8 @@ public class Evenement {
 
     public Evenement(int id, String nom, String lieu, double prix, String description,
                      LocalDateTime dateEvenement, TypeEvenement type, Personne createur) {
-        this(id, nom, lieu, prix, description, dateEvenement, type, List.of(createur));
+        this(id, nom, lieu, prix, description, dateEvenement, type,
+                createur == null ? List.of() : List.of(createur));
     }
 
     public Evenement(int id, String nom, String lieu, double prix, String description,
@@ -73,11 +74,12 @@ public class Evenement {
         return estOrganisateur(p) || getInvitationDe(p).map(Invitation::estAcceptee).orElse(false);
     }
 
-    public boolean estPasse() {
+    private boolean estPasse() {
         return dateEvenement.isBefore(LocalDateTime.now());
     }
 
-    private void verifierOrganisateur(Personne appelant, String action) {
+    /** Règle 1 : lève AccesRefuseException si l'appelant n'est pas organisateur. */
+    public void verifierOrganisateur(Personne appelant, String action) {
         if (!estOrganisateur(appelant)) {
             throw new AccesRefuseException("seul un organisateur peut " + action);
         }
@@ -85,14 +87,7 @@ public class Evenement {
 
     public void ajouterOrganisateur(Personne appelant, Personne p) {
         verifierOrganisateur(appelant, "ajouter un co-organisateur");
-
-        if (estParticipant(p)) {
-            throw new IllegalStateException(p.getNomComplet() + " est déjà participant");
-        }
-
-        if (estOrganisateur(p)) {
-            throw new IllegalStateException(p.getNomComplet() + " est déjà organisateur");
-        }
+        verifierNiOrganisateurNiInvite(p);
         organisateurs.add(p);
     }
 
@@ -102,26 +97,26 @@ public class Evenement {
         appliquerInfos(nom, lieu, prix, description, dateEvenement, type);
     }
 
-    public void modifierVisuels(Personne appelant, byte[] logo, byte[] banniere) {
-        verifierOrganisateur(appelant, "modifier les visuels");
-        this.logo = logo;
-        this.banniere = banniere;
-    }
-
-    public Invitation inviter(Personne appelant, Personne p) {
-        verifierOrganisateur(appelant, "inviter");
+    /** Une personne est soit organisatrice, soit invitée, jamais les deux. */
+    private void verifierNiOrganisateurNiInvite(Personne p) {
         if (estOrganisateur(p)) {
-            throw new IllegalStateException(p.getNomComplet() + " est organisateur de l'événement");
+            throw new IllegalStateException(p.getNomComplet() + " est déjà organisateur");
         }
         if (getInvitationDe(p).isPresent()) {
             throw new IllegalStateException(p.getNomComplet() + " est déjà invité(e)");
         }
+    }
+
+    public Invitation inviter(Personne appelant, Personne p) {
+        verifierOrganisateur(appelant, "inviter");
+        verifierNiOrganisateurNiInvite(p);
         Invitation i = new Invitation(p);
         invitations.add(i);
         return i;
     }
 
-    public List<Besoin> repondreInvitation(Personne invite, boolean accepte) {
+    /** F15, F20 : refuser après avoir accepté rend ses besoins aux organisateurs. */
+    public void repondreInvitation(Personne invite, boolean accepte) {
         Invitation i = getInvitationDe(invite)
                 .orElseThrow(() -> new AccesRefuseException("vous n'êtes pas invité(e) à cet événement"));
         if (estPasse()) {
@@ -129,58 +124,55 @@ public class Evenement {
         }
         if (accepte) {
             i.accepter();
-            return List.of();
+            return;
         }
         i.refuser();
-        List<Besoin> liberes = new ArrayList<>();
-        for (Besoin b : besoins) {
-            if (invite.equals(b.getAcheteur())) {
-                b.liberer();
-                liberes.add(b);
-            }
+        for (Besoin b : besoinsAchetesPar(invite)) {
+            b.acheter(null);
         }
-        return liberes;
+    }
+
+    public List<Besoin> besoinsAchetesPar(Personne p) {
+        return besoins.stream().filter(b -> p.equals(b.getAcheteur())).toList();
+    }
+
+    private void verifierBesoinDeLEvenement(Besoin b) {
+        if (!besoins.contains(b)) {
+            throw new IllegalArgumentException("Ce besoin n'appartient pas à l'événement");
+        }
     }
 
     public Optional<Invitation> getInvitationDe(Personne p) {
         return invitations.stream().filter(i -> i.getInvite().equals(p)).findFirst();
     }
 
-    public void ajouterBesoin(Besoin b) {
-        if (b == null) {
-            throw new IllegalArgumentException("Besoin vide");
-        }
-        besoins.add(b);
-    }
-
     public void ajouterBesoin(Personne appelant, Besoin b) {
         verifierOrganisateur(appelant, "ajouter un besoin");
-        ajouterBesoin(b);
+        chargerBesoin(b);
     }
 
     public void supprimerBesoin(Personne appelant, Besoin b) {
         verifierOrganisateur(appelant, "supprimer un besoin");
-        if (!besoins.remove(b)) {
-            throw new IllegalArgumentException("Ce besoin n'appartient pas à l'événement");
-        }
+        verifierBesoinDeLEvenement(b);
+        besoins.remove(b);
     }
 
     public void attribuerBesoin(Personne appelant, Besoin b, Personne acheteur) {
-        if (!besoins.contains(b)) {
-            throw new IllegalArgumentException("Ce besoin n'appartient pas à l'événement");
+        if (acheteur == null) {
+            throw new IllegalArgumentException("L'acheteur est obligatoire");
+        }
+        verifierBesoinDeLEvenement(b);
+        // Les droits d'abord (règle 5 : AccesRefuseException), puis les autres règles
+        if (!estOrganisateur(appelant) && !appelant.equals(acheteur)) {
+            throw new AccesRefuseException("seul un organisateur attribue un besoin à quelqu'un d'autre");
         }
         if (!estParticipant(acheteur)) {
             throw new IllegalStateException(acheteur.getNomComplet()
                     + " n'est pas participant (il faut avoir accepté l'invitation)");
         }
-        if (!estOrganisateur(appelant)) {
-            if (!appelant.equals(acheteur)) {
-                throw new AccesRefuseException("seul un organisateur attribue un besoin à quelqu'un d'autre");
-            }
-            if (b.estAchete()) {
-                throw new IllegalStateException("Ce besoin est déjà pris en charge par "
-                        + b.getAcheteur().getNomComplet());
-            }
+        if (!estOrganisateur(appelant) && b.estAchete()) {
+            throw new IllegalStateException("Ce besoin est déjà pris en charge par "
+                    + b.getAcheteur().getNomComplet());
         }
         b.acheter(acheteur);
     }
@@ -207,6 +199,15 @@ public class Evenement {
         messages.add(m);
     }
 
+    // Chargement depuis la base (DAO) : les règles ont été vérifiées à l'écriture
+
+    public void chargerBesoin(Besoin b) {
+        if (b == null) {
+            throw new IllegalArgumentException("Besoin vide");
+        }
+        besoins.add(b);
+    }
+
     public void chargerInvitation(Invitation i) {
         invitations.add(i);
     }
@@ -218,7 +219,7 @@ public class Evenement {
     public List<Personne> getParticipants() {
         List<Personne> participants = new ArrayList<>(organisateurs);
         for (Invitation i : invitations) {
-            if (i.estAcceptee()) {
+            if (estParticipant(i.getInvite())) {
                 participants.add(i.getInvite());
             }
         }
