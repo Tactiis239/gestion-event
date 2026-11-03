@@ -12,7 +12,7 @@ SGBD : **SQLite** (un simple fichier `evenements.db`, rien à installer).
 | [`db.properties.example`](db.properties.example) | Modèle de configuration de la connexion |
 
 Code Java associé : `ConnexionBD`, `InitBase` (`serveur.bdd`), les DAO (`serveur.dao`), la transaction
-(`serveur.service.Transaction`) et `serveur.MainTestBDD`.
+(`serveur.bdd.Transaction`) et `serveur.MainTestBDD`.
 
 ## MCD
 

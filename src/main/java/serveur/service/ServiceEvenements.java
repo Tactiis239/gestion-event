@@ -1,13 +1,16 @@
 package serveur.service;
 
 import modele.*;
+import serveur.bdd.Transaction;
 import serveur.dao.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Logique métier côté serveur.
+ * Logique métier côté serveur : charge l'événement, applique la règle du modèle, puis écrit en base
+ * dans une transaction. Méthodes synchronized : un seul client à la fois modifie les données (F27).
+ * L'appelant est toujours la personne connectée : les droits sont vérifiés côté serveur, jamais par le client.
  */
 public class ServiceEvenements {
     public static final double BUDGET_TRAITEUR_DEFAUT = 1500.0;
@@ -36,7 +39,16 @@ public class ServiceEvenements {
         return new ServiceEvenements(p, new EvenementDao(p, i, b, m), i, b, m);
     }
 
-    public synchronized Evenement trouverEvenement(int idEvenement) {
+    /** Détail d'un événement : réservé à ses organisateurs et à ses invités (F6). */
+    public synchronized Evenement consulterEvenement(Personne appelant, int idEvenement) {
+        Evenement e = trouverEvenement(idEvenement);
+        if (!e.estOrganisateur(appelant) && e.getInvitationDe(appelant).isEmpty()) {
+            throw new AccesRefuseException("seuls les organisateurs et les invités voient cet événement");
+        }
+        return e;
+    }
+
+    private Evenement trouverEvenement(int idEvenement) {
         return evenements.trouver(idEvenement)
                 .orElseThrow(() -> new IllegalArgumentException("Événement inconnu : " + idEvenement));
     }

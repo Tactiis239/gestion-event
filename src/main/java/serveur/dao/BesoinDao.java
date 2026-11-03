@@ -16,7 +16,7 @@ public class BesoinDao {
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, idEvenement);
-            Sql.setEntier(ps, 2, b.estAchete() ? b.getAcheteur().getId() : null);
+            Sql.setEntier(ps, 2, idAcheteur(b));
             ps.setString(3, typeDe(b));
             ps.setString(4, b.getNom());
             ps.setDouble(5, b.getPrix());
@@ -41,7 +41,7 @@ public class BesoinDao {
     /** Enregistre l'acheteur actuel du besoin. */
     public void mettreAJourAcheteur(Connection c, Besoin b) {
         try (PreparedStatement ps = c.prepareStatement("UPDATE besoin SET id_acheteur = ? WHERE id = ?")) {
-            if (b.estAchete()) ps.setInt(1, b.getAcheteur().getId()); else ps.setNull(1, Types.INTEGER);
+            Sql.setEntier(ps, 1, idAcheteur(b));
             ps.setInt(2, b.getId());
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -79,9 +79,12 @@ public class BesoinDao {
         }
     }
 
-    /**
-     * Valeur de la colonne type selon la sous-classe.
-     */
+    /** Colonne id_acheteur : NULL quand les organisateurs achètent. */
+    private static Integer idAcheteur(Besoin b) {
+        return b.estAchete() ? b.getAcheteur().getId() : null;
+    }
+
+    /** Valeur de la colonne type selon la sous-classe. */
     private static String typeDe(Besoin b) {
         if (b instanceof Consommable) return "CONSOMMABLE";
         if (b instanceof MaterielSon) return "MATERIEL_SON";

@@ -23,7 +23,7 @@ public class MessageDao {
             ps.setInt(2, m.getEnvoyeur().getId());
             ps.setInt(3, m.getReceveur().getId());
             ps.setString(4, m.getContenu());
-            ps.setString(5, m.getDate().withNano(0).toString());
+            ps.setString(5, Sql.versTexte(m.getDate()));
             ps.executeUpdate();
             int id = Sql.cleGeneree(ps);
             m.setId(id);

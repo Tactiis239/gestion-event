@@ -4,6 +4,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Locale;
 
 /** Classe représentant une personne. */
 public class Personne {
@@ -46,7 +47,7 @@ public class Personne {
 
     /** Forme unique d'un e-mail (espaces retirés, minuscules), à l'écriture comme à la recherche. */
     public static String normaliserEmail(String email) {
-        return email == null ? "" : email.trim().toLowerCase();
+        return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
     }
 
     public String getNomComplet() {

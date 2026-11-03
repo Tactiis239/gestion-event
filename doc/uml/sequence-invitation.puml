@@ -22,15 +22,16 @@ C -> GC : envoie la requête (ligne de texte) via Socket
 GC -> S : inviter(personneConnectee, idEvt, email)
 S -> D : trouver(idEvt)
 D --> S : e
-S -> P : trouverParEmail(email)
-P --> S : p
-S -> E : inviter(personneConnectee, p)
-E -> E : estOrganisateur(personneConnectee)
+S -> E : verifierOrganisateur(personneConnectee, "inviter")
+note right of S : droits vérifiés avant la recherche :\nun non-organisateur ne peut pas savoir\nsi un e-mail existe
 alt la personne connectée n'est pas organisatrice
   E --> S : AccesRefuseException
   S --> GC : AccesRefuseException
   GC --> C : Reponse(succes=false, "Accès refusé")
 else organisateur valide
+  S -> P : trouverParEmail(email)
+  P --> S : p
+  S -> E : inviter(personneConnectee, p)
   create participant "i:Invitation" as I
   E -> I : new Invitation(p)
   note right of I : statut = EN_ATTENTE

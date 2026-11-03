@@ -1,6 +1,6 @@
 package modele;
 
-/** Ce qu'il faut acheter ou apporter pour un événement.*/
+/** Ce qu'il faut acheter ou apporter pour un événement. */
 public abstract class Besoin {
     private int id;
     private String nom;

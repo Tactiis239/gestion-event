@@ -38,9 +38,14 @@ public final class ConnexionBD {
         try {
             if (url.startsWith("jdbc:sqlite")) {
                 Connection c = DriverManager.getConnection(url);
-                // SQLite ignore les clés étrangères par défaut : il faut les activer à chaque connexion
                 try (Statement st = c.createStatement()) {
+                    // SQLite ignore les clés étrangères par défaut : il faut les activer à chaque connexion
                     st.execute("PRAGMA foreign_keys = ON");
+                    // Plusieurs clients (un thread chacun) : attendre qu'une écriture se termine au lieu d'échouer
+                    st.execute("PRAGMA busy_timeout = 5000");
+                } catch (SQLException e) {
+                    c.close(); // ne pas laisser fuir la connexion si la configuration échoue
+                    throw e;
                 }
                 return c;
             }

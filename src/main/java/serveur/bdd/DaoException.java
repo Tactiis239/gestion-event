@@ -5,6 +5,8 @@ package serveur.bdd;
  * Les couches supérieures (services, IHM) n'ont ainsi pas à connaître java.sql.
  */
 public class DaoException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
     public DaoException(String message, Throwable cause) {
         super(message, cause);
     }

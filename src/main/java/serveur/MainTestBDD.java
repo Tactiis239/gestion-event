@@ -36,9 +36,11 @@ public class MainTestBDD {
     public static void main(String[] args) throws Exception {
         // Repartir d'une base vide (le nom doit correspondre à db.url dans db.properties)
         Files.deleteIfExists(Path.of("evenements.db"));
-        InitBase.executerScript("/schema.sql");
-        InitBase.executerScript("/donnees_test.sql");
+        InitBase.initialiser();
         System.out.println("1. Base créée et remplie");
+        InitBase.initialiser();
+        verifier(compter("SELECT COUNT(*) FROM personne") == 4,
+                "second démarrage : données conservées, comptes de test non réinsérés (F4, F30)");
 
         PersonneDao personnes = new PersonneDao();
         AuthService auth = new AuthService(personnes);
@@ -59,12 +61,12 @@ public class MainTestBDD {
         Personne emma = auth.creerCompte("Moreau", "Emma", "emma@example.org", "secret", null);
         verifier(auth.seConnecter(" emma@example.org ", "secret").equals(emma),
                 "compte créé (haché bcrypt) puis connexion, espaces autour de l'e-mail ignorés");
-        echec(() -> auth.creerCompte("Moreau", "Emma", "EMMA@example.org", "autre", null), RuntimeException.class);
-        verifier(true, "même e-mail à la casse près refusé (UNIQUE COLLATE NOCASE)");
+        echec(() -> auth.creerCompte("Moreau", "Emma", "EMMA@example.org", "autre", null), IllegalStateException.class);
+        verifier(true, "même e-mail à la casse près refusé");
 
         // ------------------------------------------------------------ données de test
         System.out.println("\n3. Données de test relues (Factory sur la colonne type)");
-        Evenement anniv = service.trouverEvenement(1);
+        Evenement anniv = service.consulterEvenement(alice, 1);
         System.out.println("   " + anniv);
         for (Besoin b : anniv.getBesoins()) {
             System.out.println("     - " + b);
@@ -112,11 +114,13 @@ public class MainTestBDD {
         echec(() -> service.envoyerMessage(chloe, idSoiree, alice.getId(), "Je peux venir ?"),
                 AccesRefuseException.class);
         verifier(true, "Chloé (non participante) ne peut pas écrire dans la soirée (règle 3)");
+        echec(() -> service.consulterEvenement(chloe, idSoiree), AccesRefuseException.class);
+        verifier(true, "Chloé (ni organisatrice ni invitée) ne peut pas consulter la soirée (F6)");
 
         // ------------------------------------------------------------ relecture = redémarrage du serveur
         System.out.println("\n5. Relecture complète depuis la base (comme après un redémarrage)");
         ServiceEvenements apresRedemarrage = ServiceEvenements.creerParDefaut();
-        Evenement relue = apresRedemarrage.trouverEvenement(idSoiree);
+        Evenement relue = apresRedemarrage.consulterEvenement(alice, idSoiree);
         System.out.println("   " + relue);
         for (Besoin b : relue.getBesoins()) {
             System.out.println("     - " + b);
@@ -135,7 +139,7 @@ public class MainTestBDD {
         // ------------------------------------------------------------ transaction
         System.out.println("\n6. Transaction : Bob refuse après avoir accepté (F20)");
         service.repondreInvitation(bob, idSoiree, false);
-        Evenement apresRefus = service.trouverEvenement(idSoiree);
+        Evenement apresRefus = service.consulterEvenement(alice, idSoiree);
         verifier(!apresRefus.getBesoin(enceinte.getId()).orElseThrow().estAchete(),
                 "l'enceinte n'a plus d'acheteur : elle revient aux organisateurs");
         verifier(apresRefus.getInvitationDe(bob).orElseThrow().getStatut() == StatutInvitation.REFUSEE,
@@ -147,20 +151,20 @@ public class MainTestBDD {
                 apresRefus.getDateEvenement(), TypeEvenement.SOIREE);
         echec(() -> service.modifierEvenement(bob, idSoiree, "Piratée", null, 0, null,
                 apresRefus.getDateEvenement(), TypeEvenement.AUTRE), AccesRefuseException.class);
-        verifier(service.trouverEvenement(idSoiree).getNom().equals("Soirée de fin d'année"),
+        verifier(service.consulterEvenement(alice, idSoiree).getNom().equals("Soirée de fin d'année"),
                 "Alice modifie la soirée, Bob ne peut pas (F7, règle 1)");
         service.attribuerBesoin(alice, idSoiree, jus.getId(), alice.getId());
-        verifier(alice.equals(service.trouverEvenement(idSoiree).getBesoin(jus.getId()).orElseThrow().getAcheteur()),
+        verifier(alice.equals(service.consulterEvenement(alice, idSoiree).getBesoin(jus.getId()).orElseThrow().getAcheteur()),
                 "Alice attribue le jus à une participante (F18)");
         service.supprimerBesoin(alice, idSoiree, jus.getId());
-        verifier(service.trouverEvenement(idSoiree).getBesoin(jus.getId()).isEmpty(), "Alice supprime le jus (F17)");
+        verifier(service.consulterEvenement(alice, idSoiree).getBesoin(jus.getId()).isEmpty(), "Alice supprime le jus (F17)");
 
         // ------------------------------------------------------------ mariage, co-organisateur
         System.out.println("\n7. Mariage (budget traiteur automatique) et co-organisateur");
         Evenement mariage = service.creerEvenement(chloe, "Mariage de Chloé", "Lille", 0, null,
                 LocalDateTime.now().plusYears(1).withSecond(0).withNano(0), TypeEvenement.MARIAGE);
         service.ajouterOrganisateur(chloe, mariage.getId(), "david@example.org");
-        Evenement mariageRelu = service.trouverEvenement(mariage.getId());
+        Evenement mariageRelu = service.consulterEvenement(chloe, mariage.getId());
         System.out.println("   " + mariageRelu + ", organisateurs : " + mariageRelu.getOrganisateurs().size());
         verifier(mariageRelu.getBesoins().size() == 1, "budget traiteur ajouté une fois");
         verifier(mariageRelu.getOrganisateurs().size() == 2, "David est co-organisateur");

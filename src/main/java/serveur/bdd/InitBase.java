@@ -4,18 +4,41 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.stream.Collectors;
 
-/** Exécute un script SQL du classpath (bdd/schema.sql, bdd/donnees_test.sql). */
+/** Prépare la base au démarrage à partir des scripts du classpath (bdd/schema.sql, bdd/donnees_test.sql). */
 public final class InitBase {
 
     private InitBase() { }
 
-    public static void executerScript(String ressource) {
+    /**
+     * Crée les tables manquantes, puis insère les comptes de test si la base est vide (F4).
+     * Sans effet sur une base déjà remplie : les données sont conservées entre deux démarrages (F30).
+     */
+    public static void initialiser() {
+        // Une seule transaction : si une insertion échoue, rien n'est gardé et le prochain démarrage recommence
+        Transaction.executerSansRetour(c -> {
+            executerScript(c, "/schema.sql");
+            if (estVide(c)) {
+                executerScript(c, "/donnees_test.sql");
+            }
+        });
+    }
+
+    private static boolean estVide(Connection c) {
+        try (Statement st = c.createStatement(); ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM personne")) {
+            return rs.next() && rs.getInt(1) == 0;
+        } catch (SQLException e) {
+            throw new DaoException("Lecture de la table personne impossible", e);
+        }
+    }
+
+    private static void executerScript(Connection c, String ressource) {
         String sql = lire(ressource);
-        try (Connection c = ConnexionBD.get(); Statement st = c.createStatement()) {
+        try (Statement st = c.createStatement()) {
             for (String instruction : sql.split(";")) {
                 if (!instruction.isBlank()) {
                     st.execute(instruction);

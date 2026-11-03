@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Un événement et ses règles métier
+ * Un événement et ses règles métier.
  * Il possède ses invitations, besoins et messages.
- * Il référence ses organisateurs, qui existent sans lui..
+ * Il référence ses organisateurs, qui existent sans lui.
  */
 public class Evenement {
     private int id;

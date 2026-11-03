@@ -35,7 +35,7 @@ final class Sql {
     }
 
     static String versTexte(LocalDateTime d) {
-        return d == null ? null : d.withSecond(0).withNano(0).toString();
+        return d == null ? null : d.withNano(0).toString();
     }
 
     static String versTexte(LocalDate d) {
