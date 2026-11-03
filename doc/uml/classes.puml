@@ -16,16 +16,15 @@ class Evenement {
   -description: String
   -dateEvenement: LocalDateTime
   -type: TypeEvenement
-  +modifier(appelant: Personne, nom: String, lieu: String, prix: double, description: String, dateEvenement: LocalDateTime, type: TypeEvenement): void
-  +inviter(appelant: Personne, p: Personne): Invitation
+  +modifier(organisateur: Personne, nom: String, lieu: String, prix: double, description: String, dateEvenement: LocalDateTime, type: TypeEvenement): void
+  +inviter(organisateur: Personne, p: Personne): Invitation
   +repondreInvitation(invite: Personne, accepte: boolean): void
-  +ajouterOrganisateur(appelant: Personne, p: Personne): void
+  +ajouterOrganisateur(organisateur: Personne, p: Personne): void
   +estOrganisateur(p: Personne): boolean
-  +verifierOrganisateur(appelant: Personne, action: String): void
   +estParticipant(p: Personne): boolean
-  +ajouterBesoin(appelant: Personne, b: Besoin): void
-  +supprimerBesoin(appelant: Personne, b: Besoin): void
-  +attribuerBesoin(appelant: Personne, b: Besoin, acheteur: Personne): void
+  +ajouterBesoin(organisateur: Personne, b: Besoin): void
+  +supprimerBesoin(organisateur: Personne, b: Besoin): void
+  +attribuerBesoin(organisateur: Personne, b: Besoin, acheteur: Personne): void
   +envoyerMessage(m: Message): void
   +getParticipants(): List<Personne>
   +calculerBudget(): double
@@ -102,7 +101,6 @@ class Personne {
   -nom: String
   -prenom: String
   -telephone: String
-  -avatar: byte[]
   -email: String
   -mdpHash: String
   -dateNaissance: LocalDate
@@ -130,23 +128,5 @@ Materiel <|-- MaterielSon
 Materiel <|-- MaterielLumiere
 
 Evenement ..> AccesRefuseException : <<throw>>
-
-note right of Evenement
-  **modifier()**, **inviter()**, **ajouterOrganisateur()**,
-  **ajouterBesoin()**, **supprimerBesoin()** :
-  ne fonctionnent que si l'appelant
-  est dans la liste des organisateurs
-  (**verifierOrganisateur()** lève sinon
-  AccesRefuseException).
-  **attribuerBesoin()** : l'acheteur doit être
-  participant (**estParticipant()**) ; un invité
-  ne peut se l'attribuer qu'à lui-même.
-  **Création** : si type = MARIAGE,
-  un budget traiteur (Consommable)
-  est ajouté une fois aux besoins.
-end note
-
-note "acheteur = null →\nacheté par les organisateurs\n**estAchete()** : acheteur ≠ null" as N2
-Besoin .. N2
 
 @enduml
