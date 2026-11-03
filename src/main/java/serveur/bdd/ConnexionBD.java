@@ -23,7 +23,8 @@ public final class ConnexionBD {
         Properties p = new Properties();
         try (InputStream in = ConnexionBD.class.getResourceAsStream("/db.properties")) {
             if (in == null) {
-                throw new DaoException("db.properties introuvable : copiez db.properties.example", null);
+                throw new DaoException("db.properties introuvable : copiez bdd/db.properties.example "
+                        + "dans src/main/resources/db.properties", null);
             }
             p.load(in);
         } catch (IOException e) {

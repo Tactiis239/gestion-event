@@ -1,0 +1,61 @@
+// MCD (Merise) de la gestion d'événements.
+// Régénérer l'image depuis la racine du projet : dot -Tpng -Gdpi=110 bdd/mcd.dot -o bdd/mcd.png
+graph MCD {
+    graph [layout=neato, overlap=false, splines=true, sep="+20", fontname="Helvetica", pad=0.5,
+           label="MCD — Gestion d'événements", labelloc=t, fontsize=18];
+    node  [fontname="Helvetica", fontsize=11];
+    edge  [fontname="Helvetica", fontsize=10];
+
+    // ---------------------------------------------------------------- entités
+    node [shape=plain];
+    PERSONNE [pos="0,4!", label=<
+      <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+        <tr><td bgcolor="#dddddd"><b>PERSONNE</b></td></tr>
+        <tr><td align="left"><u>id</u><br align="left"/>nom<br align="left"/>prenom<br align="left"/>telephone<br align="left"/>avatar<br align="left"/>email<br align="left"/>mdp_hash<br align="left"/>date_naissance<br align="left"/></td></tr>
+      </table>>];
+    EVENEMENT [pos="8,4!", label=<
+      <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+        <tr><td bgcolor="#dddddd"><b>EVENEMENT</b></td></tr>
+        <tr><td align="left"><u>id</u><br align="left"/>nom<br align="left"/>lieu<br align="left"/>prix<br align="left"/>logo<br align="left"/>banniere<br align="left"/>description<br align="left"/>date_evenement<br align="left"/>type<br align="left"/></td></tr>
+      </table>>];
+    BESOIN [pos="4,-0.5!", label=<
+      <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+        <tr><td bgcolor="#dddddd"><b>BESOIN</b></td></tr>
+        <tr><td align="left"><u>id</u><br align="left"/>type<br align="left"/>nom<br align="left"/>prix<br align="left"/>quantite<br align="left"/>perissable<br align="left"/>a_rendre<br align="left"/>etat<br align="left"/>decibels<br align="left"/>puissance_watts<br align="left"/>lumens<br align="left"/>couleur<br align="left"/></td></tr>
+      </table>>];
+    MESSAGE [pos="4,8.2!", label=<
+      <table border="1" cellborder="0" cellspacing="0" cellpadding="4">
+        <tr><td bgcolor="#dddddd"><b>MESSAGE</b></td></tr>
+        <tr><td align="left"><u>id</u><br align="left"/>contenu<br align="left"/>date_envoi<br align="left"/></td></tr>
+      </table>>];
+
+    // ---------------------------------------------------------------- associations
+    node [shape=ellipse, style=filled, fillcolor="#f5f5f5"];
+    ORGANISER [pos="4,5.2!",  label="ORGANISER"];
+    INVITER   [pos="4,3.2!",  label="INVITER\nstatut\ndate_invitation"];
+    ACHETER   [pos="1,1.2!",  label="ACHETER"];
+    CONTENIR  [pos="7,1.2!",  label="CONTENIR"];
+    ENVOYER   [pos="0.6,7.2!", label="ENVOYER"];
+    RECEVOIR  [pos="2,6.6!",  label="RECEVOIR"];
+    CONCERNER [pos="7.4,7.2!", label="CONCERNER"];
+
+    // ---------------------------------------------------------------- cardinalités
+    PERSONNE  -- ORGANISER [label="0,n"];
+    ORGANISER -- EVENEMENT [label="1,n"];
+
+    PERSONNE  -- INVITER   [label="0,n"];
+    INVITER   -- EVENEMENT [label="0,n"];
+
+    PERSONNE  -- ACHETER   [label="0,n"];
+    ACHETER   -- BESOIN    [label="0,1"];
+
+    EVENEMENT -- CONTENIR  [label="0,n"];
+    CONTENIR  -- BESOIN    [label="1,1"];
+
+    PERSONNE  -- ENVOYER   [label="0,n"];
+    ENVOYER   -- MESSAGE   [label="1,1"];
+    PERSONNE  -- RECEVOIR  [label="0,n"];
+    RECEVOIR  -- MESSAGE   [label="1,1"];
+    EVENEMENT -- CONCERNER [label="0,n"];
+    CONCERNER -- MESSAGE   [label="1,1"];
+}

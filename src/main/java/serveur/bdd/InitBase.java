@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.stream.Collectors;
 
-/** Exécute un script SQL du dossier resources (schema.sql, donnees_test.sql). */
+/** Exécute un script SQL du classpath (bdd/schema.sql, bdd/donnees_test.sql). */
 public final class InitBase {
 
     private InitBase() { }

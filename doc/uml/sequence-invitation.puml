@@ -11,17 +11,19 @@ participant ":Client" as C
 participant ":GestionnaireClient" as GC
 participant ":ServiceEvenements" as S
 participant "e:Evenement" as E
-participant ":DepotJDBC" as D
+participant ":EvenementDao" as D
+participant ":PersonneDao" as P
+participant ":InvitationDao" as ID
 
 Organisateur -> IHM : clique sur « Inviter » (email)
 IHM -> C : envoyer(Requete INVITER)
 note right of IHM : dans une Task JavaFX
 C -> GC : envoie la requête (ligne de texte) via Socket
 GC -> S : inviter(personneConnectee, idEvt, email)
-S -> D : trouverEvenement(idEvt)
+S -> D : trouver(idEvt)
 D --> S : e
-S -> D : trouverPersonne(email)
-D --> S : p
+S -> P : trouverParEmail(email)
+P --> S : p
 S -> E : inviter(personneConnectee, p)
 E -> E : estOrganisateur(personneConnectee)
 alt la personne connectée n'est pas organisatrice
@@ -32,8 +34,8 @@ else organisateur valide
   create participant "i:Invitation" as I
   E -> I : new Invitation(p)
   note right of I : statut = EN_ATTENTE
-  S -> D : enregistrerInvitation(idEvt, p)
-  note right of D : INSERT INTO invitation\n(PreparedStatement)
+  S -> ID : creer(c, idEvt, i)
+  note right of ID : INSERT INTO invitation\n(PreparedStatement)
   S --> GC : ok
   GC --> C : Reponse(succes=true)
 end

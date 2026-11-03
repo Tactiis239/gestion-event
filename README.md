@@ -13,7 +13,7 @@ Projet de POO Java, 3A FISA Info, groupe G1.
 ## Lancer
 
 ```
-cp src/main/resources/db.properties.example src/main/resources/db.properties
+cp bdd/db.properties.example src/main/resources/db.properties
 mvn compile exec:java
 ```
 
@@ -21,5 +21,14 @@ mvn compile exec:java
 
 ## Configuration
 
-Les paramètres de connexion sont dans `db.properties`, qui n'est pas versionné.
-Copiez `db.properties.example` pour le créer.
+Les paramètres de connexion sont dans `src/main/resources/db.properties`, qui n'est pas versionné.
+Copiez `bdd/db.properties.example` pour le créer.
+
+## Structure
+
+| Dossier | Contenu |
+|---|---|
+| `bdd/` | Base de données (jalon 2) : MCD, MLD, scripts SQL, optimisation. Voir [`bdd/README.md`](bdd/README.md) |
+| `doc/` | Cahier des charges et diagrammes UML |
+| `src/main/java/modele/` | Objets métier |
+| `src/main/java/serveur/` | Accès à la base (`bdd`, `dao`) et logique métier (`service`) |

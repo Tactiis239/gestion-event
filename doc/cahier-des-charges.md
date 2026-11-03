@@ -70,7 +70,7 @@ Le volume horaire imparti (18 heures cumulées) délimite strictement le périm�
 | Bibliothèques      | `sqlite-jdbc`, `jBCrypt`, JavaFX (`org.openjfx`)        | Les seules dépendances du projet ; SQLite fait partie des SGBD autorisés ; bcrypt répond à la demande de hachage salé.        |
 | Réseau             | Sockets TCP (`ServerSocket` / `Socket`) + flux texte    | Plus simple qu'une API REST et directement lié au cours. Un thread par client connecté.    |
 | Échanges           | Une ligne de texte par `Requete` / `Reponse` (`PrintWriter` / `BufferedReader`) | Protocole simple et lisible, testable à la main ; pas de sérialisation Java, donc pas de désérialisation naïve. |
-| Persistance        | SQLite via JDBC (`sqlite-jdbc`), `ConnexionBD` + `DepotJDBC` | Données conservées entre deux lancements, dans un seul fichier, sans serveur à installer. |
+| Persistance        | SQLite via JDBC (`sqlite-jdbc`), `ConnexionBD` + DAO (`serveur.dao`) | Données conservées entre deux lancements, dans un seul fichier, sans serveur à installer. |
 | Interface          | JavaFX (vues FXML + contrôleurs)                        | Interface graphique claire ; la séparation vue / contrôleur reste lisible en POO.          |
 | Mots de passe      | Hachés avec bcrypt (`jBCrypt`)                          | Jamais stockés en clair ; bcrypt intègre un sel et un coût réglable contre la force brute. |
 | Images             | Logo, bannière et avatar stockés en `byte[]` (BLOB)     | Stockés directement dans SQLite ; encodés en Base64 pour passer dans le flux texte.       |
@@ -190,14 +190,14 @@ L'application est découpée en quatre paquets :
 | --------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `modele`  | Objets métier et leurs règles                | `Personne`, `Evenement`, `TypeEvenement`, `Invitation`, `StatutInvitation`, `Message`, `Besoin` (+ `Consommable`, `Materiel` → `MaterielSon`, `MaterielLumiere`), `EtatMateriel`, `AccesRefuseException` |
 | `reseau`  | Protocole partagé entre client et serveur    | `Requete`, `Reponse`, `TypeRequete`                                                                                                                       |
-| `serveur` | Écoute réseau, contrôle d'accès, persistance | `Serveur`, `GestionnaireClient`, `ServiceEvenements`, `Depot` (interface), `DepotJDBC`, `ConnexionBD`, `AuthentificationException`                                         |
+| `serveur` | Écoute réseau, contrôle d'accès, persistance | `Serveur`, `GestionnaireClient`, `ServiceEvenements`, `Dao` (interface), `EvenementDao`, `PersonneDao`, `InvitationDao`, `BesoinDao`, `MessageDao`, `ConnexionBD`, `AuthentificationException`                                         |
 | `client`  | Connexion au serveur et interface JavaFX     | `Client`, `ApplicationClient`, `ControleurConnexion`, `ControleurEvenements`, `ControleurEvenement` (+ vues `.fxml`)                                      |
 
 Notions POO mises en œuvre :
 
 - **Héritage :** `Besoin` → `Consommable`, `Materiel` ; `Materiel` → `MaterielSon`, `MaterielLumiere`.
 - **Classes abstraites et polymorphisme :** `Besoin` et `Materiel` sont abstraites ; un `Evenement` manipule tous ses besoins via une `List<Besoin>` (`calculerCout()`, `acheter()`), quel que soit leur type.
-- **Interface :** `Depot`, implémentée par `DepotJDBC` (le service ne dépend que de l'interface : on pourrait changer de base sans le modifier).
+- **Interface :** `Dao<T>`, implémentée par `EvenementDao` et `PersonneDao` (une classe DAO par table : tout le SQL reste dans les DAO, le service n'en contient aucun).
 - **Composition :** un `Evenement` possède ses `Invitation`, ses `Besoin` et ses `Message` (supprimés avec lui).
 - **Agrégation :** un `Evenement` référence ses organisateurs (`Personne`), qui existent indépendamment de lui.
 - **Énumérations :** `TypeEvenement`, `StatutInvitation`, `EtatMateriel`, `TypeRequete`.
@@ -208,7 +208,9 @@ Notions POO mises en œuvre :
 
 ## 8. Base de données
 
-SGBD : **SQLite** (autorisé par le module, aucune installation). Le schéma est la traduction directe du diagramme de classes (section 9.2).
+SGBD : **SQLite** (autorisé par le module, aucune installation). Le schéma est la traduction directe du diagramme de classes (section 9.2). Les livrables de la base (MCD, scripts SQL, optimisation) sont dans le dossier `bdd/`.
+
+![MCD](../bdd/mcd.png)
 
 ### 8.1 Modèle logique (MLD)
 
@@ -270,9 +272,9 @@ Comme dans le kit de la séance 2, le DAO fait le SQL et le service (`ServiceEve
 
 ### 8.7 Accès JDBC
 
-- `ConnexionBD` lit les paramètres dans `db.properties`, qui n'est pas versionné (modèle : `db.properties.example`).
-- `DepotJDBC` implémente l'interface `Depot` ; toutes les requêtes passent par `PreparedStatement` (jamais de SQL concaténé) et `try-with-resources`.
-- `schema.sql` et `donnees_test.sql` recréent la base en une commande ; `MainTestBDD` vérifie que l'accès aux données fonctionne.
+- `ConnexionBD` lit les paramètres dans `db.properties`, qui n'est pas versionné (modèle : `bdd/db.properties.example`).
+- Les DAO (`serveur.dao`) concentrent tout le SQL ; toutes les requêtes passent par `PreparedStatement` (jamais de SQL concaténé) et `try-with-resources`.
+- `bdd/schema.sql` et `bdd/donnees_test.sql` recréent la base en une commande ; `MainTestBDD` vérifie que l'accès aux données fonctionne.
 
 ---
 
@@ -303,7 +305,7 @@ Ce diagramme montre le trajet complet d'une requête : de l'interface JavaFX jus
 | Séance | Date  | Durée | Contenu | Livrable |
 | ------ | ----- | ----- | ------- | -------- |
 | 1 | 06/10 | 3 h | Groupes, choix du sujet, cahier des charges, UML | **Étape 1** (ce document, complété au jalon 2) |
-| 2 | 20/10 | 3 h | Base de données : MCD / MLD, `schema.sql`, index + `EXPLAIN`, transaction, `ConnexionBD`, `DepotJDBC` | **Jalon 2** : dossier `bdd/`, tag `jalon-2` |
+| 2 | 20/10 | 3 h | Base de données : MCD / MLD, `schema.sql`, index + `EXPLAIN`, transaction, `ConnexionBD`, DAO (`serveur.dao`) | **Jalon 2** : dossier `bdd/`, tag `jalon-2` |
 | 3 | 03/11 | 3 h | Paquet `modele` et logique métier sur la base (`ServiceEvenements`, règles, exceptions) | Règles métier testées avec un `main` |
 | 4 | 17/11 | 3 h | `reseau` + `serveur` : sockets, threads, protocole texte, bcrypt ; IHM : prototype des écrans et charte de couleurs | Serveur qui authentifie et répond, maquette de l'interface |
 | 5 | 01/12 | 3 h | Paquet `client` : écrans JavaFX, requêtes P1 puis P2, tests, optimisation, README | Démonstration à deux clients |

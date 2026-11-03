@@ -1,4 +1,4 @@
-# Copiez ce fichier en db.properties et adaptez-le.
+# Copiez ce fichier en src/main/resources/db.properties et adaptez-le.
 # Ne versionnez JAMAIS db.properties (voir .gitignore) : seul l'exemple est dans le dépôt.
 
 # --- SQLite (par défaut, aucune installation) ---

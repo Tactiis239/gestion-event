@@ -30,6 +30,18 @@
   </dependencies>
 
   <build>
+    <!-- Les scripts SQL sont rangés dans bdd/ (livrable du jalon 2) et chargés depuis le classpath -->
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>bdd</directory>
+        <includes>
+          <include>*.sql</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <!-- Lancer : mvn compile exec:java -->
       <plugin>
