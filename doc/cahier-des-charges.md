@@ -98,7 +98,7 @@ Priorités : **P1** = MVP, indispensable à la démonstration ; **P2** = prévu,
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | F5  | Une personne connectée crée un événement d'un type donné (anniversaire, mariage, soirée, autre) avec nom, description, date, lieu et prix de participation. Elle en devient organisatrice. | P1       |
 | F6  | La personne voit la liste des événements qu'elle organise et de ceux auxquels elle est invitée.                                                                                             | P1       |
-| F7  | Un organisateur modifie les informations de l'événement.                                                                                                                                    | P2       |
+| F7  | Un organisateur modifie les informations de l'événement (`modifier()`).                                                                                                                                    | P2       |
 | F8  | Un organisateur supprime l'événement (invitations, besoins et messages associés sont supprimés).                                                                                            | P2       |
 | F9  | À la création d'un mariage, un budget traiteur (`Consommable`) est ajouté une fois à ses besoins ; un organisateur peut le supprimer s'il n'en veut pas.                                | P3       |
 | F10 | Un organisateur ajoute un co-organisateur parmi les personnes existantes (`ajouterOrganisateur()`, sinon `AccesRefuseException`).                                                                                                                   | P2       |
@@ -109,7 +109,7 @@ Priorités : **P1** = MVP, indispensable à la démonstration ; **P2** = prévu,
 | ID  | Exigence                                                                                                                     | Priorité |
 | --- | ---------------------------------------------------------------------------------------------------------------------------- | -------- |
 | F12 | Un organisateur invite une personne existante (par son e-mail). L'invitation est créée avec le statut `EN_ATTENTE` (`inviter()`).          | P1       |
-| F13 | Seul un organisateur de l'événement peut y inviter quelqu'un (`estOrganisateur()`, sinon `AccesRefuseException`).                                 | P1       |
+| F13 | Seul un organisateur de l'événement peut y inviter quelqu'un (`verifierOrganisateur()`, qui appelle `estOrganisateur()`, sinon `AccesRefuseException`).                                 | P1       |
 | F14 | Une même personne ne peut pas être invitée deux fois au même événement.                                                      | P1       |
 | F15 | L'invité consulte ses invitations et les accepte ou les refuse (`repondreInvitation()`, qui appelle `accepter()` ou `refuser()`). | P1       |
 | F16 | Les organisateurs voient l'état de chaque invitation (en attente, acceptée, refusée).                                        | P1       |

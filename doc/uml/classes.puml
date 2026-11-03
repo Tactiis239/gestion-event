@@ -16,10 +16,12 @@ class Evenement {
   -description: String
   -dateEvenement: LocalDateTime
   -type: TypeEvenement
+  +modifier(appelant: Personne, nom: String, lieu: String, prix: double, description: String, dateEvenement: LocalDateTime, type: TypeEvenement): void
   +inviter(appelant: Personne, p: Personne): Invitation
   +repondreInvitation(invite: Personne, accepte: boolean): void
   +ajouterOrganisateur(appelant: Personne, p: Personne): void
   +estOrganisateur(p: Personne): boolean
+  +verifierOrganisateur(appelant: Personne, action: String): void
   +estParticipant(p: Personne): boolean
   +ajouterBesoin(appelant: Personne, b: Besoin): void
   +supprimerBesoin(appelant: Personne, b: Besoin): void
@@ -130,10 +132,12 @@ Materiel <|-- MaterielLumiere
 Evenement ..> AccesRefuseException : <<throw>>
 
 note right of Evenement
-  **inviter()**, **ajouterOrganisateur()**,
+  **modifier()**, **inviter()**, **ajouterOrganisateur()**,
   **ajouterBesoin()**, **supprimerBesoin()** :
   ne fonctionnent que si l'appelant
-  est dans la liste des organisateurs.
+  est dans la liste des organisateurs
+  (**verifierOrganisateur()** lève sinon
+  AccesRefuseException).
   **attribuerBesoin()** : l'acheteur doit être
   participant (**estParticipant()**) ; un invité
   ne peut se l'attribuer qu'à lui-même.
