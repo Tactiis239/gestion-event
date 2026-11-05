@@ -11,7 +11,6 @@ class Evenement {
   -nom: String
   -lieu: String
   -prix: double
-  -logo: byte[]
   -banniere: byte[]
   -description: String
   -dateEvenement: LocalDateTime
@@ -118,7 +117,6 @@ Evenement "1" *-- "*" Besoin : besoins
 Evenement "1" *-- "*" Message : messages
 
 Message "*" --> "1" Personne : envoyeur
-Message "*" --> "1" Personne : receveur
 Invitation "*" --> "1" Personne : invite
 Besoin "*" --> "0..1" Personne : acheteur
 
