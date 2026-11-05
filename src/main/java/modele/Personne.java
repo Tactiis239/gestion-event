@@ -4,7 +4,6 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.Locale;
 
 /** Classe représentant une personne. */
 public class Personne {
@@ -12,13 +11,11 @@ public class Personne {
     private final String nom;
     private final String prenom;
     private final String telephone;
-    private final byte[] avatar;
     private final String email;
     private final String mdpHash;
     private final LocalDate dateNaissance;
 
-    public Personne(int id, String nom, String prenom, String telephone, byte[] avatar,
-                    String email, String mdpHash, LocalDate dateNaissance) {
+    public Personne(int id, String nom, String prenom, String telephone, String email, String mdpHash, LocalDate dateNaissance) {
         if (nom == null || nom.isBlank() || prenom == null || prenom.isBlank()) {
             throw new IllegalArgumentException("Le nom et le prénom sont obligatoires");
         }
@@ -32,22 +29,16 @@ public class Personne {
         this.nom = nom;
         this.prenom = prenom;
         this.telephone = telephone;
-        this.avatar = avatar;
-        this.email = normaliserEmail(email);
+        this.email = email;
         this.mdpHash = mdpHash;
         this.dateNaissance = dateNaissance;
     }
 
     public boolean seConnecter(String email, String mdp) {
-        if (email == null || mdp == null || !this.email.equals(normaliserEmail(email))) {
+        if (email == null || mdp == null || !this.email.equals(email)) {
             return false;
         }
         return BCrypt.checkpw(mdp, mdpHash);
-    }
-
-    /** Forme unique d'un e-mail (espaces retirés, minuscules), à l'écriture comme à la recherche. */
-    public static String normaliserEmail(String email) {
-        return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
     }
 
     public String getNomComplet() {
@@ -82,10 +73,6 @@ public class Personne {
 
     public String getTelephone() {
         return telephone;
-    }
-
-    public byte[] getAvatar() {
-        return avatar;
     }
 
     public String getEmail() {
