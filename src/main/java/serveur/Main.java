@@ -1,7 +1,9 @@
 package serveur;
 
+import modele.Personne;
 import serveur.bdd.ConnexionBD;
 import serveur.bdd.InitBase;
+import serveur.dao.PersonneDao;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -24,5 +26,14 @@ public class Main {
                 }
             }
         }
+
+        // --- Test PersonneDao ---
+        PersonneDao personnes = new PersonneDao();
+        System.out.println("\nPersonneDao :");
+        System.out.println("  par e-mail : " + personnes.trouverParEmail("alice@example.org").map(Personne::getNomComplet).orElse("introuvable"));
+        System.out.println("  par id 2   : " + personnes.trouver(2).map(Personne::getNomComplet).orElse("introuvable"));
+        System.out.println("  id 999     : " + personnes.trouver(999).map(Personne::getNomComplet).orElse("introuvable"));
+        System.out.println("  connexion  : " + personnes.trouverParEmail("alice@example.org").get().seConnecter("alice@example.org", "motdepasse"));
+        System.out.println("  tous       : " + personnes.trouverTous().size() + " personne(s)");
     }
 }
