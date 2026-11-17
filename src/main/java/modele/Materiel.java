@@ -5,7 +5,7 @@ public abstract class Materiel extends Besoin {
     private final boolean aRendre;
     private final EtatMateriel etat;
 
-    protected Materiel(int id, String nom, double prix, int quantite, boolean aRendre, EtatMateriel etat) {
+    public Materiel(int id, String nom, double prix, int quantite, boolean aRendre, EtatMateriel etat) {
         super(id, nom, prix, quantite);
         if (etat == null) {
             throw new IllegalArgumentException("L'état du matériel est obligatoire");
