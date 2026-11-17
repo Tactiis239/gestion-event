@@ -1,34 +1,26 @@
 # Gestion d'événements
 
-Application client/serveur en Java pour organiser des événements (anniversaires, soirées, réunions) :
-invitations, réponses des invités et répartition des besoins (« qui apporte quoi ? »).
+Application client/serveur en Java pour organiser un événement (anniversaire, mariage, soirée…) :
+invitations, besoins à acheter et budget. Projet de POO, 3A FISA Info, groupe G1.
 
-Projet de POO Java, 3A FISA Info, groupe G1.
-
-## Prérequis
-
-- JDK 17 ou plus
-- Maven
+Le détail est dans le [cahier des charges](doc/cahier-des-charges.md).
 
 ## Lancer
 
+Prérequis : JDK 17+, Maven.
+
 ```
-cp bdd/db.properties.example src/main/resources/db.properties
+cp src/main/resources/db.properties.example src/main/resources/db.properties
 mvn compile exec:java
 ```
 
-`MainTestBDD` recrée la base SQLite à partir des scripts SQL et vérifie que l'accès aux données fonctionne.
-
-## Configuration
-
-Les paramètres de connexion sont dans `src/main/resources/db.properties`, qui n'est pas versionné.
-Copiez `bdd/db.properties.example` pour le créer.
+Pour l'instant, `MainTestBDD` crée la base SQLite et vérifie l'accès aux données.
 
 ## Structure
 
 | Dossier | Contenu |
 |---|---|
-| `bdd/` | Base de données (jalon 2) : MCD, MLD, scripts SQL, optimisation. Voir [`bdd/README.md`](bdd/README.md) |
-| `doc/` | Cahier des charges et diagrammes UML |
-| `src/main/java/modele/` | Objets métier |
-| `src/main/java/serveur/` | Accès à la base (`bdd`, `dao`) et logique métier (`service`) |
+| `src/main/java/modele/` | Classes métier |
+| `src/main/java/serveur/` | Base de données (`bdd`, `dao`) et logique métier (`service`) |
+| `src/main/resources/` | Scripts SQL et modèle de configuration |
+| `doc/` | Cahier des charges, diagramme de classes (`uml/`), MCD et MLD (`bdd/`) |
