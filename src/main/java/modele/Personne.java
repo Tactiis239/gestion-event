@@ -5,25 +5,23 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.time.LocalDate;
 import java.time.Period;
 
-/** Classe représentant une personne. */
+/** Une personne : utilisateur de l'application. */
 public class Personne {
     private int id;
-    private final String nom;
-    private final String prenom;
-    private final String telephone;
-    private final String email;
-    private final String mdpHash;
-    private final LocalDate dateNaissance;
+    private String nom;
+    private String prenom;
+    private String telephone;
+    private String email;
+    private String mdpHash;
+    private LocalDate dateNaissance;
 
-    public Personne(int id, String nom, String prenom, String telephone, String email, String mdpHash, LocalDate dateNaissance) {
+    public Personne(int id, String nom, String prenom, String telephone, String email, String mdpHash,
+                    LocalDate dateNaissance) {
         if (nom == null || nom.isBlank() || prenom == null || prenom.isBlank()) {
             throw new IllegalArgumentException("Le nom et le prénom sont obligatoires");
         }
-        if (email == null || email.isBlank()) {
-            throw new IllegalArgumentException("L'e-mail est obligatoire");
-        }
-        if (mdpHash == null || mdpHash.isBlank()) {
-            throw new IllegalArgumentException("Le haché du mot de passe est obligatoire");
+        if (email == null || email.isBlank() || mdpHash == null || mdpHash.isBlank()) {
+            throw new IllegalArgumentException("L'e-mail et le mot de passe sont obligatoires");
         }
         this.id = id;
         this.nom = nom;
@@ -34,8 +32,9 @@ public class Personne {
         this.dateNaissance = dateNaissance;
     }
 
+    /** Vrai si l'e-mail correspond et si le mot de passe correspond au haché bcrypt. */
     public boolean seConnecter(String email, String mdp) {
-        if (email == null || mdp == null || !this.email.equals(email)) {
+        if (email == null || mdp == null || !this.email.equalsIgnoreCase(email)) {
             return false;
         }
         return BCrypt.checkpw(mdp, mdpHash);
@@ -52,15 +51,10 @@ public class Personne {
         return Period.between(dateNaissance, LocalDate.now()).getYears();
     }
 
+    // Accesseurs
+
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        if (this.id != 0) {
-            throw new IllegalStateException("L'identifiant est déjà attribué");
-        }
-        this.id = id;
     }
 
     public String getNom() {
@@ -87,20 +81,10 @@ public class Personne {
         return dateNaissance;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Personne autre)) return false;
-        return id != 0 && id == autre.id;
-    }
-
-    @Override
-    public int hashCode() {
-        return id != 0 ? Integer.hashCode(id) : System.identityHashCode(this);
-    }
-
-    @Override
-    public String toString() {
-        return "Personne[id=" + id + ", " + getNomComplet() + ", " + email + "]";
+    public void setId(int id) {
+        if (this.id != 0) {
+            throw new IllegalStateException("L'identifiant est déjà attribué");
+        }
+        this.id = id;
     }
 }

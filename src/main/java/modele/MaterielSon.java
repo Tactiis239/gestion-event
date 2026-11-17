@@ -2,8 +2,8 @@ package modele;
 
 /** Matériel de sonorisation. */
 public class MaterielSon extends Materiel {
-    private final int decibels;
-    private final int puissanceWatts;
+    private int decibels;
+    private int puissanceWatts;
 
     public MaterielSon(int id, String nom, double prix, int quantite, boolean aRendre, EtatMateriel etat,
                        int decibels, int puissanceWatts) {
@@ -12,16 +12,13 @@ public class MaterielSon extends Materiel {
         this.puissanceWatts = puissanceWatts;
     }
 
+    // Accesseurs
+
     public int getDecibels() {
         return decibels;
     }
 
     public int getPuissanceWatts() {
         return puissanceWatts;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString() + ", " + decibels + " dB, " + puissanceWatts + " W";
     }
 }

@@ -24,9 +24,7 @@ public abstract class Besoin {
         this.quantite = quantite;
     }
 
-    /**
-     * Attribue l'achat à une personne ; null rend le besoin aux organisateurs.
-     */
+    /** Attribue l'achat à une personne. */
     public void acheter(Personne p) {
         this.acheteur = p;
     }
@@ -39,15 +37,10 @@ public abstract class Besoin {
         return prix * quantite;
     }
 
+    // Accesseurs
+
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        if (this.id != 0) {
-            throw new IllegalStateException("L'identifiant est déjà attribué");
-        }
-        this.id = id;
     }
 
     public String getNom() {
@@ -66,9 +59,10 @@ public abstract class Besoin {
         return acheteur;
     }
 
-    @Override
-    public String toString() {
-        String qui = estAchete() ? acheteur.getNomComplet() : "les organisateurs";
-        return String.format("%s x%d (%.2f €) [%s] acheté par %s", nom, quantite, calculerCout(), getClass().getSimpleName(), qui);
+    public void setId(int id) {
+        if (this.id != 0) {
+            throw new IllegalStateException("L'identifiant est déjà attribué");
+        }
+        this.id = id;
     }
 }

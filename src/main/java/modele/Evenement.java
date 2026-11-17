@@ -3,14 +3,12 @@ package modele;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 /**
- * Un événement et ses règles métier.
- * Il possède ses invitations, besoins et messages.
- * Il référence ses organisateurs, qui existent sans lui.
+ * Un événement et ses règles de gestion.
+ * Il possède ses invitations, ses besoins et ses messages, et a au moins un organisateur.
+ * Une action non autorisée lève AccesRefuseException.
  */
 public class Evenement {
     private int id;
@@ -27,10 +25,14 @@ public class Evenement {
     private final List<Besoin> besoins = new ArrayList<>();
     private final List<Message> messages = new ArrayList<>();
 
-    public Evenement(int id, String nom, String lieu, double prix, byte[] banniere,
+    /** Le créateur devient le premier organisateur (un événement a toujours au moins un organisateur). */
+    public Evenement(int id, Personne createur, String nom, String lieu, double prix, byte[] banniere,
                      String description, LocalDateTime dateEvenement, TypeEvenement type) {
-        if (nom == null || nom.isBlank() || lieu == null || lieu.isBlank() || dateEvenement == null || type == null) {
-            throw new IllegalArgumentException("Événement incomplet");
+        if (createur == null || nom == null || nom.isBlank() || dateEvenement == null || type == null) {
+            throw new IllegalArgumentException("Le créateur, le nom, la date et le type sont obligatoires");
+        }
+        if (prix < 0) {
+            throw new IllegalArgumentException("Le prix ne peut pas être négatif");
         }
         this.id = id;
         this.nom = nom;
@@ -40,178 +42,196 @@ public class Evenement {
         this.description = description;
         this.dateEvenement = dateEvenement;
         this.type = type;
+        organisateurs.add(createur);
     }
 
-    /* Aucune création de l'événement DAO pour l'instant*/
-
-    public void modifier(Personne organisateur, String nom, String lieu, double prix, byte[] banniere,
-                         String description, LocalDateTime dateEvenement, TypeEvenement type) {
-        if (nom == null || nom.isBlank() || lieu == null || lieu.isBlank() || dateEvenement == null || type == null) {
-            throw new IllegalArgumentException("Événement incomplet");
+    public void modifier(Personne organisateur, String nom, String lieu, double prix, String description,
+                         LocalDateTime dateEvenement, TypeEvenement type) {
+        if (!estOrganisateur(organisateur)) {
+            throw new AccesRefuseException("seul un organisateur peut modifier l'événement");
+        }
+        if (nom == null || nom.isBlank() || dateEvenement == null || type == null) {
+            throw new IllegalArgumentException("Le nom, la date et le type sont obligatoires");
+        }
+        if (prix < 0) {
+            throw new IllegalArgumentException("Le prix ne peut pas être négatif");
         }
         this.nom = nom;
         this.lieu = lieu;
         this.prix = prix;
-        this.banniere = banniere;
         this.description = description;
         this.dateEvenement = dateEvenement;
         this.type = type;
     }
 
-    public void inviter(Personne organisateur, Personne personne) {
-        if (!organisateurs.contains(organisateur)) {
-            throw new IllegalArgumentException("L'utilisateur n'est pas un organisateur de cet événement");
+    public Invitation inviter(Personne organisateur, Personne p) {
+        if (!estOrganisateur(organisateur)) {
+            throw new AccesRefuseException("seul un organisateur peut inviter");
         }
-        if (personne == null) {
-            throw new IllegalArgumentException("La personne à inviter est invalide");
+        if (p == null) {
+            throw new IllegalArgumentException("La personne à inviter est obligatoire");
         }
-        invitations.add(new Invitation(personne));
+        if (estOrganisateur(p)) {
+            throw new IllegalStateException("Cette personne est déjà organisatrice");
+        }
+        for (Invitation invitation : invitations) {
+            if (invitation.getInvite() == p) {
+                throw new IllegalStateException("Cette personne est déjà invitée");
+            }
+        }
+        Invitation invitation = new Invitation(p);
+        invitations.add(invitation);
+        return invitation;
     }
 
-    public void repondreInvitation(Personne invite, boolean accepte){
-        //TODO: repondre à l'invitation de l'invité (accepter ou refuser)
+    public void repondreInvitation(Personne invite, boolean accepte) {
+        for (Invitation invitation : invitations) {
+            if (invitation.getInvite() == invite) {
+                if (accepte) {
+                    invitation.accepter();
+                } else {
+                    invitation.refuser();
+                }
+                return;
+            }
+        }
+        throw new AccesRefuseException("cette personne n'est pas invitée");
     }
 
-    public void ajouterOrganisateur(Personne organisateur, Personne personne) {
-        if (!organisateurs.contains(organisateur)) {
-            throw new IllegalArgumentException("L'utilisateur n'est pas un organisateur de cet événement");
+    public void ajouterOrganisateur(Personne organisateur, Personne p) {
+        if (!estOrganisateur(organisateur)) {
+            throw new AccesRefuseException("seul un organisateur peut ajouter un co-organisateur");
         }
-        if (personne == null) {
-            throw new IllegalArgumentException("La personne à ajouter est invalide");
+        if (p == null) {
+            throw new IllegalArgumentException("La personne à ajouter est obligatoire");
         }
-        organisateurs.add(personne);
+        if (!estOrganisateur(p)) {
+            organisateurs.add(p);
+        }
     }
 
-    public boolean estOrganisateur(Personne personne) {
-        if (!organisateurs.contains(personne)) {
-            throw new IllegalArgumentException("L'utilisateur n'est pas un organisateur de cet événement");
-        }
-        return true;
+    public boolean estOrganisateur(Personne p) {
+        return organisateurs.contains(p);
     }
 
-    public boolean estParticipant(Personne personne) {
-        //TODO: vérifier si la personne est un participant de l'événement (invité et a accepté l'invitation)
-        return true;
+    /** Participant = organisateur, ou invité qui a accepté. */
+    public boolean estParticipant(Personne p) {
+        return getParticipants().contains(p);
     }
 
-    public void ajouterBesoin(Personne organisateur, Besoin besoin){
-        if (!organisateurs.contains(organisateur)) {
-            throw new IllegalArgumentException("L'utilisateur n'est pas un organisateur de cet événement");
+    public void ajouterBesoin(Personne organisateur, Besoin b) {
+        if (!estOrganisateur(organisateur)) {
+            throw new AccesRefuseException("seul un organisateur peut ajouter un besoin");
         }
-        besoins.add(besoin);
+        if (b == null) {
+            throw new IllegalArgumentException("Le besoin est obligatoire");
+        }
+        besoins.add(b);
     }
 
-    public void supprimerBesoin(Personne organisateur, Besoin besoin){
-        if (!organisateurs.contains(organisateur)) {
-            throw new IllegalArgumentException("L'utilisateur n'est pas un organisateur de cet événement");
+    public void supprimerBesoin(Personne organisateur, Besoin b) {
+        if (!estOrganisateur(organisateur)) {
+            throw new AccesRefuseException("seul un organisateur peut supprimer un besoin");
         }
-        besoins.remove(besoin);
+        besoins.remove(b);
     }
-     public void attribuerBesoin(Personne organisateur, Besoin besoin, Personne acheteur) {
-         //TODO: retourner la liste des participants à l'événement
-     }
 
-     public void envoyerMessage (Personne organisateur, String contenu){
-         if (!estOrganisateur(organisateur)) {
-             throw new IllegalArgumentException("L'utilisateur n'est pas un organisateur de cet événement");
-         }
-        if (contenu == null || contenu.isBlank()) {
-            throw new IllegalArgumentException("Le message est vide");
+    public void attribuerBesoin(Personne organisateur, Besoin b, Personne acheteur) {
+        if (!estOrganisateur(organisateur)) {
+            throw new AccesRefuseException("seul un organisateur peut attribuer un besoin");
         }
-         //TODO: envoyer le message à tous les participants de l'événement
-     }
+        if (!besoins.contains(b)) {
+            throw new IllegalArgumentException("Ce besoin n'appartient pas à l'événement");
+        }
+        if (!estParticipant(acheteur)) {
+            throw new IllegalStateException("Un besoin ne peut être attribué qu'à un participant");
+        }
+        b.acheter(acheteur);
+    }
 
-     public double calculerBudget(){
+    public void envoyerMessage(Message m) {
+        if (m == null) {
+            throw new IllegalArgumentException("Le message est obligatoire");
+        }
+        if (!estParticipant(m.getEnvoyeur())) {
+            throw new AccesRefuseException("seuls les participants peuvent envoyer un message");
+        }
+        messages.add(m);
+    }
+
+    public List<Personne> getParticipants() {
+        List<Personne> participants = new ArrayList<>(organisateurs);
+        for (Invitation invitation : invitations) {
+            if (invitation.estAcceptee()) {
+                participants.add(invitation.getInvite());
+            }
+        }
+        return participants;
+    }
+
+    /** Budget = somme des coûts des besoins (polymorphisme : chaque besoin calcule son coût). */
+    public double calculerBudget() {
         double total = 0;
-        /*boucle for qui calcule le prix total des besoins de l'évènement*/
-        for(Besoin besoin : besoins){
-            total = total + besoin.getPrix();
+        for (Besoin b : besoins) {
+            total += b.calculerCout();
         }
         return total;
-     }
-
-     /* Getters */
-
-    public List<Message> getMessages() {
-        return messages;
     }
 
-    public List<Besoin> getBesoins() {
-        return besoins;
-    }
+    // Accesseurs
 
-    public List<Invitation> getInvitations() {
-        return invitations;
-    }
-
-    public List<Personne> getOrganisateurs() {
-        return organisateurs;
-    }
-
-    public TypeEvenement getType() {
-        return type;
-    }
-
-    public LocalDateTime getDateEvenement() {
-        return dateEvenement;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public byte[] getBanniere() {
-        return banniere;
-    }
-
-    public double getPrix() {
-        return prix;
-    }
-
-    public String getLieu() {
-        return lieu;
+    public int getId() {
+        return id;
     }
 
     public String getNom() {
         return nom;
     }
 
-    public int getId() {
-        return id;
+    public String getLieu() {
+        return lieu;
     }
 
+    public double getPrix() {
+        return prix;
+    }
 
-    /* Setters */
+    public byte[] getBanniere() {
+        return banniere;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public LocalDateTime getDateEvenement() {
+        return dateEvenement;
+    }
+
+    public TypeEvenement getType() {
+        return type;
+    }
 
     public void setId(int id) {
+        if (this.id != 0) {
+            throw new IllegalStateException("L'identifiant est déjà attribué");
+        }
         this.id = id;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
+    public List<Personne> getOrganisateurs() {
+        return Collections.unmodifiableList(organisateurs);
     }
 
-    public void setLieu(String lieu) {
-        this.lieu = lieu;
+    public List<Invitation> getInvitations() {
+        return Collections.unmodifiableList(invitations);
     }
 
-    public void setPrix(double prix) {
-        this.prix = prix;
+    public List<Besoin> getBesoins() {
+        return Collections.unmodifiableList(besoins);
     }
 
-    public void setBanniere(byte[] banniere) {
-        this.banniere = banniere;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setDateEvenement(LocalDateTime dateEvenement) {
-        this.dateEvenement = dateEvenement;
-    }
-
-    public void setType(TypeEvenement type) {
-        this.type = type;
+    public List<Message> getMessages() {
+        return Collections.unmodifiableList(messages);
     }
 }

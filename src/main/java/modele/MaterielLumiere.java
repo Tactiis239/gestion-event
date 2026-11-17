@@ -1,9 +1,9 @@
 package modele;
 
-/** Matériel de lumière (projecteur, lampe, etc.). */
+/** Matériel d'éclairage. */
 public class MaterielLumiere extends Materiel {
-    private final int lumens;
-    private final String couleur;
+    private int lumens;
+    private String couleur;
 
     public MaterielLumiere(int id, String nom, double prix, int quantite, boolean aRendre, EtatMateriel etat,
                            int lumens, String couleur) {
@@ -12,16 +12,13 @@ public class MaterielLumiere extends Materiel {
         this.couleur = couleur;
     }
 
+    // Accesseurs
+
     public int getLumens() {
         return lumens;
     }
 
     public String getCouleur() {
         return couleur;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString() + ", " + lumens + " lm, " + couleur;
     }
 }

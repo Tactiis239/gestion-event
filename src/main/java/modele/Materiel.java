@@ -1,11 +1,11 @@
 package modele;
 
-/** Matériel à louer ou à vendre. */
+/** Matériel à apporter, éventuellement à rendre après l'événement. */
 public abstract class Materiel extends Besoin {
-    private final boolean aRendre;
-    private final EtatMateriel etat;
+    private boolean aRendre;
+    private EtatMateriel etat;
 
-    public Materiel(int id, String nom, double prix, int quantite, boolean aRendre, EtatMateriel etat) {
+    protected Materiel(int id, String nom, double prix, int quantite, boolean aRendre, EtatMateriel etat) {
         super(id, nom, prix, quantite);
         if (etat == null) {
             throw new IllegalArgumentException("L'état du matériel est obligatoire");
@@ -14,16 +14,13 @@ public abstract class Materiel extends Besoin {
         this.etat = etat;
     }
 
+    // Accesseurs
+
     public boolean isARendre() {
         return aRendre;
     }
 
     public EtatMateriel getEtat() {
         return etat;
-    }
-
-    @Override
-    public String toString() {
-        return super.toString() + " - état " + etat + (aRendre ? ", à rendre" : "");
     }
 }

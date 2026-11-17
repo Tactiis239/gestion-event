@@ -6,19 +6,17 @@ import java.time.LocalDateTime;
 public class Invitation {
     private int id;
     private StatutInvitation statut;
-    private final LocalDateTime dateInvitation;
+    private LocalDateTime dateInvitation;
+    private Personne invite;
 
+    /** Nouvelle invitation : en attente, datée de maintenant. */
     public Invitation(Personne invite) {
-        this(0, StatutInvitation.EN_ATTENTE, LocalDateTime.now());
-    }
-
-    public Invitation(int id, StatutInvitation statut, LocalDateTime dateInvitation) {
-        if (statut == null || dateInvitation == null) {
-            throw new IllegalArgumentException("Invitation incomplète");
+        if (invite == null) {
+            throw new IllegalArgumentException("La personne invitée est obligatoire");
         }
-        this.id = id;
-        this.statut = statut;
-        this.dateInvitation = dateInvitation;
+        this.invite = invite;
+        this.statut = StatutInvitation.EN_ATTENTE;
+        this.dateInvitation = LocalDateTime.now();
     }
 
     public void accepter() {
@@ -33,7 +31,11 @@ public class Invitation {
         return statut == StatutInvitation.ACCEPTEE;
     }
 
-    /*Getters*/
+    // Accesseurs
+
+    public Personne getInvite() {
+        return invite;
+    }
 
     public int getId() {
         return id;
@@ -47,16 +49,10 @@ public class Invitation {
         return dateInvitation;
     }
 
-    /*Setters*/
-
     public void setId(int id) {
         if (this.id != 0) {
             throw new IllegalStateException("L'identifiant est déjà attribué");
         }
         this.id = id;
-    }
-
-    public void setStatut(StatutInvitation statut) {
-        this.statut = statut;
     }
 }
