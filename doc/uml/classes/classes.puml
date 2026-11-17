@@ -1,0 +1,130 @@
+@startuml classes
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Helvetica
+skinparam classAttributeIconSize 0
+
+title Diagramme de classes — Modèle métier
+
+class Evenement {
+  -id: int
+  -nom: String
+  -lieu: String
+  -prix: double
+  -banniere: byte[]
+  -description: String
+  -dateEvenement: LocalDateTime
+  -type: TypeEvenement
+  +modifier(organisateur: Personne, nom: String, lieu: String, prix: double, description: String, dateEvenement: LocalDateTime, type: TypeEvenement): void
+  +inviter(organisateur: Personne, p: Personne): Invitation
+  +repondreInvitation(invite: Personne, accepte: boolean): void
+  +ajouterOrganisateur(organisateur: Personne, p: Personne): void
+  +estOrganisateur(p: Personne): boolean
+  +estParticipant(p: Personne): boolean
+  +ajouterBesoin(organisateur: Personne, b: Besoin): void
+  +supprimerBesoin(organisateur: Personne, b: Besoin): void
+  +attribuerBesoin(organisateur: Personne, b: Besoin, acheteur: Personne): void
+  +envoyerMessage(m: Message): void
+  +getParticipants(): List<Personne>
+  +calculerBudget(): double
+}
+
+enum TypeEvenement {
+  ANNIVERSAIRE
+  MARIAGE
+  SOIREE
+  AUTRE
+}
+
+class Message {
+  -id: int
+  -contenu: String
+  -date: LocalDateTime
+  +getContenu(): String
+  +afficher(): String
+}
+
+class Invitation {
+  -id: int
+  -statut: StatutInvitation
+  -dateInvitation: LocalDateTime
+  +accepter(): void
+  +refuser(): void
+  +estAcceptee(): boolean
+}
+
+enum StatutInvitation {
+  EN_ATTENTE
+  ACCEPTEE
+  REFUSEE
+}
+
+enum EtatMateriel {
+  NEUF
+  BON
+  USE
+  HORS_SERVICE
+}
+
+abstract class Besoin {
+  -id: int
+  -nom: String
+  -prix: double
+  -quantite: int
+  +acheter(p: Personne): void
+  +estAchete(): boolean
+  +calculerCout(): double
+}
+
+class Consommable {
+  -perissable: boolean
+}
+
+abstract class Materiel {
+  -aRendre: boolean
+  -etat: EtatMateriel
+}
+
+class MaterielSon {
+  -decibels: int
+  -puissanceWatts: int
+}
+
+class MaterielLumiere {
+  -lumens: int
+  -couleur: String
+}
+
+class Personne {
+  -id: int
+  -nom: String
+  -prenom: String
+  -telephone: String
+  -email: String
+  -mdpHash: String
+  -dateNaissance: LocalDate
+  +seConnecter(email: String, mdp: String): boolean
+  +getNomComplet(): String
+  +getAge(): int
+}
+
+class AccesRefuseException <<exception>> {
+}
+
+Evenement "*" o-- "1..*" Personne : organisateurs
+Evenement "1" *-- "*" Invitation : invitations
+Evenement "1" *-- "*" Besoin : besoins
+Evenement "1" *-- "*" Message : messages
+
+Message "*" --> "1" Personne : envoyeur
+Invitation "*" --> "1" Personne : invite
+Besoin "*" --> "0..1" Personne : acheteur
+
+Besoin <|-- Consommable
+Besoin <|-- Materiel
+Materiel <|-- MaterielSon
+Materiel <|-- MaterielLumiere
+
+Evenement ..> AccesRefuseException : <<throw>>
+
+@enduml

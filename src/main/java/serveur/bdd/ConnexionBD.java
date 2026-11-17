@@ -9,43 +9,44 @@ import java.sql.Statement;
 import java.util.Properties;
 
 /**
- * Point d'accès unique à la base. Les paramètres viennent de db.properties,
- * jamais écrits en dur dans le code.
+ * Point d'accès unique à la base SQLite. L'URL vient de db.properties.
  * Chaque appel à get() ouvre une nouvelle connexion : à fermer avec try-with-resources.
  */
 public final class ConnexionBD {
 
-    private static final Properties PROPS = charger();
+    private static final String URL = chargerUrl();
 
     private ConnexionBD() { }
 
-    private static Properties charger() {
+    private static String chargerUrl() {
         Properties p = new Properties();
         try (InputStream in = ConnexionBD.class.getResourceAsStream("/db.properties")) {
             if (in == null) {
-                throw new DaoException("db.properties introuvable : copiez db.properties.example", null);
+                throw new DaoException("db.properties introuvable : copiez src/main/resources/db.properties.example "
+                        + "dans src/main/resources/db.properties", null);
             }
             p.load(in);
         } catch (IOException e) {
             throw new DaoException("Lecture de db.properties impossible", e);
         }
-        return p;
+        return p.getProperty("db.url");
     }
 
     public static Connection get() {
-        String url = PROPS.getProperty("db.url");
         try {
-            if (url.startsWith("jdbc:sqlite")) {
-                Connection c = DriverManager.getConnection(url);
+            Connection c = DriverManager.getConnection(URL);
+            try (Statement st = c.createStatement()) {
                 // SQLite ignore les clés étrangères par défaut : il faut les activer à chaque connexion
-                try (Statement st = c.createStatement()) {
-                    st.execute("PRAGMA foreign_keys = ON");
-                }
-                return c;
+                st.execute("PRAGMA foreign_keys = ON");
+                // Plusieurs clients en même temps : attendre la fin d'une écriture au lieu d'échouer
+                st.execute("PRAGMA busy_timeout = 5000");
+            } catch (SQLException e) {
+                c.close();
+                throw e;
             }
-            return DriverManager.getConnection(url, PROPS.getProperty("db.user"), PROPS.getProperty("db.password"));
+            return c;
         } catch (SQLException e) {
-            throw new DaoException("Connexion à la base impossible : " + url, e);
+            throw new DaoException("Connexion à la base impossible : " + URL, e);
         }
     }
 }
