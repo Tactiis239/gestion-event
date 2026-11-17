@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.stream.Collectors;
 
-/** Prépare la base au démarrage à partir des scripts du classpath (bdd/schema.sql, bdd/donnees_test.sql). */
+/** Prépare la base au démarrage à partir des scripts du classpath (sql/schema.sql, sql/donnees_test.sql). */
 public final class InitBase {
 
     private InitBase() { }
@@ -21,9 +21,9 @@ public final class InitBase {
     public static void initialiser() {
         // Une seule transaction : si une insertion échoue, rien n'est gardé et le prochain démarrage recommence
         Transaction.executerSansRetour(c -> {
-            executerScript(c, "/schema.sql");
+            executerScript(c, "/sql/schema.sql");
             if (estVide(c)) {
-                executerScript(c, "/donnees_test.sql");
+                executerScript(c, "/sql/donnees_test.sql");
             }
         });
     }
