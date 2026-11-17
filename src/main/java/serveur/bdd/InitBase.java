@@ -15,8 +15,8 @@ public final class InitBase {
     private InitBase() { }
 
     /**
-     * Crée les tables manquantes, puis insère les comptes de test si la base est vide (F4).
-     * Sans effet sur une base déjà remplie : les données sont conservées entre deux démarrages (F30).
+     * Crée les tables manquantes, puis insère les données de test si la base est vide.
+     * Sans effet sur une base déjà remplie : les données sont conservées entre deux démarrages.
      */
     public static void initialiser() {
         // Une seule transaction : si une insertion échoue, rien n'est gardé et le prochain démarrage recommence

@@ -37,7 +37,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.5.0</version>
         <configuration>
-          <mainClass>serveur.MainTestBDD</mainClass>
+          <mainClass>serveur.Main</mainClass>
         </configuration>
       </plugin>
     </plugins>

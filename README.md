@@ -14,13 +14,13 @@ cp src/main/resources/db.properties.example src/main/resources/db.properties
 mvn compile exec:java
 ```
 
-Pour l'instant, `MainTestBDD` crée la base SQLite et vérifie l'accès aux données.
+Pour l'instant, `serveur.Main` crée la base SQLite et affiche le contenu de chaque table.
 
 ## Structure
 
 | Dossier | Contenu |
 |---|---|
 | `src/main/java/modele/` | Classes métier |
-| `src/main/java/serveur/` | Base de données (`bdd`, `dao`) et logique métier (`service`) |
+| `src/main/java/serveur/` | Accès à la base (`bdd`, `dao`) |
 | `src/main/resources/` | Scripts SQL et modèle de configuration |
 | `doc/` | Cahier des charges, diagramme de classes (`uml/`), MCD et MLD (`bdd/`) |
