@@ -1,10 +1,12 @@
 package serveur;
 
 import modele.Personne;
+import modele.Evenement;
 import serveur.bdd.ConnexionBD;
 import serveur.bdd.InitBase;
 import serveur.dao.PersonneDao;
 import serveur.service.Authentification;
+import serveur.dao.EvenementDao;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -62,5 +64,12 @@ public class Main {
             System.out.println(e.toString());
             System.out.println("Échec de la connexion (mail ou mot de passe incorrect)");
         }
+
+        // --- Test EvenementDao ---
+        EvenementDao evenements = new EvenementDao();
+        System.out.println("\nEvenementDao :");
+        System.out.println("  par id 1   : " + evenements.trouver(1).map(Evenement::getNom).orElse("introuvable"));
+        System.out.println("  id 999     : " + evenements.trouver(999).map(Evenement::getNom).orElse("introuvable"));
+        System.out.println("  tous       : " + evenements.trouverTous().size() + " événement(s)");
     }
 }
